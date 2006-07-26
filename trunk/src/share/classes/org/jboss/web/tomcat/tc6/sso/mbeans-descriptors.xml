@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<mbeans-descriptors>
+
+   <mbean name="ClusteredSingleSignOn"
+      description="A Valve that supports a 'single signon' user experience"
+      domain="Catalina"
+      group="Valve"
+      type="org.jboss.web.tomcat.tc6.sso.ClusteredSingleSignOn">
+
+      <attribute name="className"
+         description="Fully qualified class name of the managed object"
+         type="java.lang.String"
+         writeable="false"/>
+    
+      <attribute name="cookieDomain"
+               description="Domain to which sso cookies should be scoped"
+               type="java.lang.String"/>
+
+      <attribute name="requireReauthentication"
+         description="Should we attempt to reauthenticate each request against the security Realm?"
+         type="boolean"/>
+
+      <attribute name="clusterManager"
+         description="SSOClusterManager to use for cluster support"
+         type="org.jboss.web.tomcat.tc6.sso.SSOClusterManager"/>
+
+      <attribute name="clusterManagerClass"
+         description="Fully qualified class name of the SSOClusterManager to use for cluster support"
+         type="java.lang.String"/>
+
+      <attribute name="treeCacheName"
+         description="The ObjectName of the TreeCache that this Valve should use for cluster communications.
+                      Only relevant if clusterManagerClass is org.jboss.web.tomcat.tc6.sso.TreeCacheSSOClusterManager"
+         type="java.lang.String"/>
+
+   </mbean>
+
+</mbeans-descriptors>

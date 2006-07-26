@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/.svn/**|org/apache/tomcat/util/net/puretls/" kind="src" path="src/share/classes"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="TOMCAT_LIBS_BASE/commons-logging-1.0.4/commons-logging.jar"/>
+	<classpathentry kind="var" path="TOMCAT_LIBS_BASE/apache-ant-1.6.5/lib/ant.jar"/>
+	<classpathentry kind="var" path="TOMCAT_LIBS_BASE/eclipse/plugins/org.eclipse.jdt.core_3.1.2.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/concurrent.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/jboss-common.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/jboss-j2se.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/jboss-jmx.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/jboss-system.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/jboss-xml-binding.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/lib/log4j-boot.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/ejb3-persistence.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jboss.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jboss-auth.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jboss-cache-jdk50.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jboss-j2ee.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jboss-jca.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jbosssx.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/jgroups.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/lib/sunxacml.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/ejb3.deployer/jboss-ejb3x.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/jboss-aop-jdk50.deployer/jboss-aop-jdk50.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/jboss-aop-jdk50.deployer/jboss-aspect-library-jdk50.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/jbossweb-tomcat6.sar/jsf-libs/jsf-api.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/jbossweb-tomcat6.sar/jsf-libs/jsf-impl.jar"/>
+	<classpathentry kind="var" path="JBOSS_LIBS_BASE/server/all/deploy/jbossws.sar/jbossws-core.jar"/>
+	<classpathentry kind="output" path=".settings/output"/>
+</classpath>
