@@ -1,445 +1,341 @@
-<project name="JBoss Web" default="deploy" basedir=".">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project [
+   <!ENTITY buildmagic SYSTEM "../tools/etc/buildmagic/buildmagic.ent">
+   <!ENTITY libraries SYSTEM "../thirdparty/libraries.ent">
+   <!ENTITY modules SYSTEM "../tools/etc/buildmagic/modules.ent">
+]>
 
+<!-- ====================================================================== -->
+<!--                                                                        -->
+<!--  JBoss, the OpenSource J2EE webOS                                      -->
+<!--                                                                        -->
+<!--  Distributable under LGPL license.                                     -->
+<!--  See terms of license at http://www.gnu.org.                           -->
+<!--                                                                        -->
+<!-- ====================================================================== -->
 
-  <!-- ===================== Initialize Property Values =================== -->
+<!-- $Id: build.xml 46423 2006-07-20 20:31:48Z asaldhana $ -->
 
-  <!-- See "build.properties.sample" in the top level directory for all     -->
-  <!-- property values you must customize for successful building!!!        -->
-  <property file="${user.home}/build.properties"/>
-  <property file="build.properties"/>
+<project default="main" name="JBoss/Tomcat-5">
 
-  <property file="build.properties.default"/>
+  <!--
+     | Include the common Buildmagic elements.
+     |
+     | This defines several different targets, properties and paths.
+     | It also sets up the basic extention tasks amoung other things.
+   -->
+  &buildmagic;
 
-  <!-- Project Properties -->
-  <property name="name"                  value="JBoss Web" />
-  <property name="year"                  value="2006" />
-  <property name="version.major"         value="2" />
-  <property name="version.minor"         value="0" />
-  <property name="version.build"         value="0" />
-  <property name="version.patch"         value="DR" />
-  <property name="version.flag"          value="" />
-  <property name="version.number"        value="${version.major}.${version.minor}.${version.build}.${version.patch}" />
-  <property name="version"               value="${version.major}.${version.minor}.${version.build}.${version.patch}${version.flag}" />
+  <!--
+     | Initialize the build system.  Must depend on '_buildmagic:init'.
+     | Other targets should depend on 'init' or things will mysteriously fail.
+   -->
+  <target name="init" unless="init.disable" depends="_buildmagic:init">
+  </target>
 
-  <property name="jboss.version.major"         value="4" />
-  <property name="jboss.version.minor"         value="0" />
-  <property name="jboss.version.build"         value="0" />
-  <property name="jboss.version.patch"         value="DR" />
-  <property name="jboss.version.flag"          value="" />
-  <property name="jboss.version.number"        value="${jboss.version.major}.${jboss.version.minor}.${jboss.version.build}.${jboss.version.patch}" />
-  <property name="jboss.version"               value="${jboss.version.major}.${jboss.version.minor}.${jboss.version.build}.${jboss.version.patch}${jboss.version.flag}" />
+  <!--
+     | Configure the build system.
+     |
+     | This target is invoked by the Buildmagic initialization logic and
+     | should contain module specific configuration elements.
+   -->
+  <target name="configure" unless="configure.disable">
 
-  <property name="project"               value="jbossweb" />
-  <property name="final.name"            value="${project}-${version}" />
-  <property name="final-src.name"        value="${project}-${version}-src" />
+    <!-- Module name(s) & version -->
+    <property name="module.name" value="tomcat4"/>
+    <property name="module.Name" value="JBoss Tomcat6 Plugin"/>
+    <property file="module.version"/>
 
-  <!-- Subprojects -->
-  <property name="cvstag"                value="" />
-  <property name="cvs.base"
-           value="${basedir}/.."/>
+    &libraries;
+    <!-- The combined library classpath -->
+    <path id="library.classpath">
+      <path refid="sun.servlet.classpath"/>
+      <path refid="sun.xacml.classpath"/>
+      <path refid="sun.jsf.classpath"/>
+      <path refid="apache.commons.classpath"/>
+      <path refid="apache.log4j.classpath"/>
+      <path refid="junit.junit.classpath"/>
+      <path refid="dom4j.dom4j.classpath"/>
+      <path refid="oswego.concurrent.classpath"/>
+      <path refid="jgroups.jgroups.classpath"/>
+      <path refid="apache.modeler.classpath"/>
+      <path refid="jboss.jbossxb.classpath"/>
+    </path>
 
-  <!-- Build Defaults -->
-  <property name="jboss.build"        value="${basedir}/jboss/jboss-${jboss.version}"/>
-  <property name="jbossweb.build"     value="${basedir}/output"/>
-  <property name="jbossweb.release"   value="${basedir}/release"/>
+    <!-- ======= -->
+    <!-- Modules -->
+    <!-- ======= -->
 
-  <!-- Some compilers will disable debugging if true. And it doesn't do anything
-       in most cases -->
-  <property name="compile.optimize"     value="false"/>
-  <property name="compile.debug"        value="true" />
-  <property name="compile.deprecation"  value="false" />
-  <property name="compile.source"       value="1.5" />
+    <!-- The combined dependent module classpath -->
+    &modules;
+    <path id="dependentmodule.classpath">
+      <path refid="jboss.j2ee.classpath"/>
+      <path refid="jboss.j2ee.ext.classpath"/>
+      <path refid="jboss.system.classpath"/>
+      <path refid="jboss.security.classpath"/>
+      <path refid="jboss.server.classpath"/>
+      <path refid="jboss.common.classpath"/>
+      <path refid="jboss.j2se.classpath"/>
+      <path refid="jboss.cluster.classpath"/>
+      <path refid="jboss.cache.classpath"/>
+      <path refid="jboss.aop.classpath"/>
+      <path refid="jboss.aspects.classpath"/>
+      <path refid="jboss.jca.classpath"/>
+      <path refid="jboss.transaction.classpath"/>
+    </path>
 
-  <path id="catalina.classpath">
-    <fileset dir="${jboss.build}/server/all">
-      <include name="deploy/jbossweb-tomcat55.sar/commons-el.jar"/>
-      <include name="deploy/jbossweb-tomcat55.sar/commons-modeler.jar"/>
-      <include name="deploy/jbossweb-tomcat55.sar/jasper-compiler-jdt.jar"/>
-      <include name="lib/commons-logging.jar" />
-      <include name="lib/javax.servlet.jar" />
-      <include name="lib/javax.servlet.jsp.jar" />
-    </fileset>
-    <fileset dir="${jboss.build}/lib">
-      <include name="jboss-jmx.jar" />
-    </fileset>
-  </path>
+    <!-- The combined thirdparty classpath -->
+    <path id="thirdparty.classpath">
+      <path refid="library.classpath"/>
+      <path refid="dependentmodule.classpath"/>
+    </path>
 
-  <!-- ===================== DEPLOY: Create Directories =================== -->
-  <target name="init">
+    <!-- Where source files live -->
+    <property name="source.java" value="${module.source}/main"/>
+    <property name="source.tests" value="${module.source}/tests"/>
+    <property name="source.etc" value="${module.source}/etc"/>
+    <property name="source.resources" value="${module.source}/resources"/>
+    <property name="source.webapps" value="${module.source}/webapps"/>
 
-    <mkdir dir="${jbossweb.build}/${final.name}" />
-    <mkdir dir="${jbossweb.build}/${final.name}/server/default" />
-    <mkdir dir="${jbossweb.release}" />
+    <!-- Where build generated files will go -->
+    <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.deploy" value="${module.output}/deploy"/>
+    <property name="build.lib" value="${module.output}/lib"/>
+    <property name="build.api" value="${module.output}/api"/>
+    <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.ejb" value="${module.output}/ejb"/>
+    <property name="build.metadata" value="${module.output}/META-INF"/>
+    <property name="build.reports" value="${module.output}/reports"/>
+    <property name="build.resources" value="${module.output}/resources"/>
+    <property name="build.todo" value="${module.output}/todo"/>
+
+    <!-- classpath and local.classpath must have a value using with a path -->
+    <property name="classpath" value=""/>
+    <property name="local.classpath" value=""/>
+
+    <!-- The classpath required to build classes. -->
+    <path id="javac.tomcat.classpath">
+      <pathelement path="${classpath}"/>
+      <pathelement path="${local.classpath}"/>
+      <path refid="thirdparty.classpath"/>
+      <path refid="apache.tomcat.classpath"/>
+    </path>
+
+    <!-- The classpath required to build classes. -->
+    <path id="javac.classpath">
+      <path refid="javac.tomcat.classpath"/>
+    </path>
+
+    <!-- The classpath required to build javadocs. -->
+    <path id="javadoc.classpath">
+      <path refid="javac.tomcat.classpath"/>
+    </path>
+
+    <!-- Packages to include when generating api documentation -->
+    <property name="javadoc.packages" value="org.jboss.*"/>
 
   </target>
 
-  <!-- ===================== DEPLOY: Download JBoss ======================= -->
-  <target name="direxist">
-    <echo message="Testing  for ${destfile}"/>
-    <available file="${destfile}" type="dir" property="exist"/>
-  </target>
-  
-  <target name="downloadzip" unless="exist" depends="direxist">
-    <!-- Download and extract the package -->
-    <get src="${sourcefile}" dest="${basedir}/file.zip" />
-    <mkdir dir="${destdir}" />
-    <unzip src="${basedir}/file.zip" dest="${destdir}"/>
-    <delete file="${basedir}/file.zip"/>
-  </target>
+  <!--
+     |  Compile everything.
+     |
+     |  This target should depend on other compile-* targets for each
+     |  different type of compile that needs to be performed, short of
+     |  documentation compiles.
+    -->
+  <target name="compile"
+    depends="compile-classes, compile-resources, compile-etc"
+    description="Compile all source files."/>
 
-  <target name="download"
-          description="Download binary packages" >
-    <antcall target="downloadzip">
-      <param name="sourcefile" value="${base-sf.loc}/jboss/jboss-${jboss.version}.zip"/>
-      <param name="destfile" value="${jboss.build}"/>
-      <param name="destdir" value="${basedir}/jboss"/>
-    </antcall>    
-  </target>
-
-  
-  <!-- ====================== DEPLOY: Copy Static Files =================== -->
-  <target name="deploy-static" depends="init">
-
-    <copy todir="${jbossweb.build}/${final.name}">
-      <fileset dir="${jboss.build}">
-        <include name="copyright.txt" />
-        <include name="bin/**" />
-        <include name="lib/**" />
-        <include name="client/jbossall-client.jar" />
-        <include name="docs/dtd/**" />
-        <include name="docs/licenses/**" />
-        <include name="docs/schema/**" />
-      </fileset>
-    </copy>
-
-    <copy todir="${jbossweb.build}/${final.name}/server/default">
-      <fileset dir="${jboss.build}/server/all">
-
-        <include name="conf/**" />
-
-        <include name="lib/bindingservice-plugin.jar" />
-        <include name="lib/bsh-1.3.0.jar" />
-        <include name="lib/commons-logging.jar" />
-        <include name="lib/hsqldb.jar" />
-        <include name="lib/hsqldb-plugin.jar" />
-        <include name="lib/javassist.jar" />
-        <include name="lib/javax.servlet.jar" />
-        <include name="lib/javax.servlet.jsp.jar" />
-        <include name="lib/jboss.jar" />
-        <include name="lib/jboss-cache.jar" />
-        <include name="lib/jboss-common-jdbc-wrapper.jar" />
-        <include name="lib/jbossha.jar" />
-        <include name="lib/jboss-j2ee.jar" />
-        <include name="lib/jboss-jca.jar" />
-        <include name="lib/jboss-jsr77.jar" />
-        <include name="lib/jboss-jsr88.jar" />
-        <include name="lib/jboss-management.jar" />
-        <include name="lib/jboss-monitoring.jar" />
-        <include name="lib/jboss-remoting.jar" />
-        <include name="lib/jboss-serialization.jar" />
-        <include name="lib/jbosssx.jar" />
-        <include name="lib/jboss-transaction.jar" />
-        <include name="lib/jgroups.jar" />
-        <include name="lib/jmx-adaptor-plugin.jar" />
-        <include name="lib/jnpserver.jar" />
-        <include name="lib/log4j.jar" />
-        <include name="lib/properties-plugin.jar" />
-
-        <include name="deploy/jboss-aop.deployer/**" />
-        <include name="deploy/jmx-console.war/**" />
-        <include name="deploy/tc5-cluster.sar/**" />
-        <include name="deploy/management/**" />
-        <include name="deploy/cache-invalidation-service.xml" />
-        <include name="deploy/hsqldb-ds.xml" />
-        <include name="deploy/jboss-ha-local-jdbc.rar" />
-        <include name="deploy/jboss-ha-xa-jdbc.rar" />
-        <include name="deploy/jbossjca-service.xml" />
-        <include name="deploy/jboss-local-jdbc.rar" />
-        <include name="deploy/jboss-xa-jdbc.rar" />
-        <include name="deploy/jmx-invoker-service.xml" />
-        <include name="deploy/monitoring-service.xml" />
-        <include name="deploy/properties-service.xml" />
-        <include name="deploy/tc5-cluster-service.xml" />
-
-        <exclude name="deploy/jbossweb-tomcat55.sar/**" />
-
-      </fileset>
-
-    </copy>
-
-    <copy todir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar">
-      <fileset dir="${jboss.build}/server/all/deploy/jbossweb-tomcat55.sar">
-
-      	<exclude name="catalina.jar" />
-        <exclude name="catalina-manager.jar" />
-        <exclude name="catalina-optional.jar" />
-      	<exclude name="jasper-compiler.jar" />
-        <exclude name="jasper-runtime.jar" />
-        <exclude name="servlets-default.jar" />
-        <exclude name="servlets-invoker.jar" />
-        <exclude name="servlets-webdav.jar" />
-        <exclude name="naming-resources.jar" />
-        <exclude name="tomcat-ajp.jar" />
-        <exclude name="tomcat-apr.jar" />
-        <exclude name="tomcat-coyote.jar" />
-        <exclude name="tomcat-http.jar" />
-        <exclude name="tomcat-util.jar" />
-
-      	<exclude name="server.xml" />
-      	<exclude name="conf/**" />
-      	<exclude name="ROOT.war/**" />
-
-      </fileset>
-
-    </copy>
-
-  </target>
-
-  <target name="deploy" depends="deploy-static">
-
-    <mkdir dir="${jbossweb.build}/classes" />
-    <mkdir dir="${jbossweb.build}/native" />
-
-    <javac srcdir="src/share/classes" destdir="${jbossweb.build}/classes"
-           debug="${compile.debug}"
-           deprecation="${compile.deprecation}"
-           source="${compile.source}"
-           optimize="${compile.optimize}"
-           excludes="**/CVS/**,**/.svn/**">
-      <classpath refid="catalina.classpath" />
-      <exclude name="**/*TestCase.java" />
-      <!-- Uses Java 5 -->
-      <exclude name="**/SemaphoreValve.java" />
+  <!-- Compile all class files -->
+  <target name="compile-classes" depends="init">
+    <mkdir dir="${build.classes}"/>
+    <javac destdir="${build.classes}"
+      optimize="${javac.optimize}"
+      target="1.5"
+      source="1.5"
+      debug="${javac.debug}"
+      depend="${javac.depend}"
+      verbose="${javac.verbose}"
+      deprecation="false"
+      includeAntRuntime="${javac.include.ant.runtime}"
+      includeJavaRuntime="${javac.include.java.runtime}"
+      failonerror="${javac.fail.onerror}">
+      <src path="${source.java}"/>
+      <src path="${source.tests}"/>
+      <classpath refid="javac.tomcat.classpath"/>
     </javac>
+    <copy todir="${build.classes}">
+      <fileset dir="${source.java}">
+        <exclude name="**/*.java"/>
+        <exclude name="**/*.ser"/>
+      </fileset>
+    </copy>
 
-    <tstamp>
-        <format property="TODAY" pattern="MMM d yyyy" locale="en"/>
-        <format property="TSTAMP" pattern="hh:mm:ss"/>
-    </tstamp>
+  </target>
 
-  	<!-- Copy static resource files -->
-    <filter token="VERSION" value="${version}"/>
-    <filter token="VERSION_MAJOR" value="${version.major}"/>
-    <filter token="VERSION_MINOR" value="${version.minor}"/>
-    <filter token="VERSION_NUMBER" value="${version.number}"/>
-    <filter token="VERSION_BUILT" value="${TODAY} ${TSTAMP}"/>
-    <copy todir="${jbossweb.build}/classes" filtering="yes">
-      <fileset dir="src/share/classes">
-        <include name="**/*.xml"/>
-        <include name="**/*.properties"/>
-      </fileset>
-    </copy>
-    <copy todir="${jbossweb.build}" filtering="yes">
-      <fileset dir="">
-        <include name="README.txt"/>
-      </fileset>
-    </copy>
-    <copy todir="${jbossweb.build}/native">
-      <fileset dir="src/share/native">
-        <include name="php5servlet/php5servlet.*"/>
-      </fileset>
-    </copy>
-    <copy todir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" filtering="yes">
-      <fileset dir="src/share/resources">
-        <include name="**/*.xml"/>
-      </fileset>
-    </copy>
-    <copy todir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/ROOT.war" overwrite="yes">
-      <fileset dir="src/share/resources/ROOT.war">
+  <!-- Compile resource files -->
+  <target name="compile-resources" depends="init">
+    <mkdir dir="${build.resources}"/>
+    <copy todir="${build.resources}" filtering="yes">
+      <fileset dir="${source.resources}">
         <include name="**/*"/>
       </fileset>
     </copy>
-    <copy todir="${jbossweb.build}/${final.name}/bin" filtering="yes" overwrite="yes">
-      <fileset dir="src/share/resources/bin">
-        <include name="**/*.bat"/>
-        <include name="**/*.sh"/>
+  </target>
+
+  <!-- Compile manifests -->
+  <target name="compile-etc" depends="init">
+    <mkdir dir="${build.etc}"/>
+    <copy todir="${build.etc}" filtering="yes">
+      <fileset dir="${source.etc}">
+        <include name="**"/>
       </fileset>
     </copy>
-    <copy todir="${jbossweb.build}/${final.name}/bin" overwrite="yes">
-      <fileset dir="src/share/resources/bin">
-        <include name="**/*.ico"/>
+  </target>
+
+  <!--
+     | Build all jar files.
+   -->
+  <target name="jars"
+    description="Build the Service Archive"
+    depends="_buildmagic:build-bypass-check"
+    unless="build-bypass.on">
+
+    <call target="compile"/>
+
+    <mkdir dir="${build.lib}"/>
+    <mkdir dir="${build.deploy}/jbossweb-tomcat6.sar/META-INF"/>
+
+    <!-- Build the jbossweb-tomcat6.sar -->
+    <copy file="${build.resources}/jboss-service.xml"
+      tofile="${build.deploy}/jbossweb-tomcat6.sar/META-INF/jboss-service.xml"/>
+    <copy file="${build.resources}/context.xml"
+      todir="${build.deploy}/jbossweb-tomcat6.sar"/>
+    <copy file="${build.resources}/web.xml"
+      tofile="${build.deploy}/jbossweb-tomcat6.sar/conf/web.xml"/>
+    <copy file="${build.resources}/server.xml"
+      tofile="${build.deploy}/jbossweb-tomcat6.sar/server.xml"/>
+    <!-- TDI 20041108 breaks the build
+    <copy file="${build.resources}/sso-channel.xml"
+       tofile="${build.deploy}/jbossweb-tomcat6.sar/sso-channel.xml" />
+    -->
+    <copy todir="${build.deploy}/jbossweb-tomcat6.sar">
+      <fileset dir="${apache.tomcat.lib}">
+        <include name="*.jar"/>
       </fileset>
     </copy>
-    <chmod dir="${jbossweb.build}/${final.name}/bin" includes="*.sh" perm="+x"/>      
+    
+    <copy todir="${build.deploy}/jbossweb-tomcat6.sar"
+       file="${apache.modeler.lib}/commons-modeler.jar" />  
 
-    <!-- JBoss Web Main -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/jbossweb.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <exclude name="org/apache/catalina/servlets/CGI*" />
-        <exclude name="org/apache/catalina/servlets/Invoker*" />
-        <exclude name="org/apache/catalina/ssi/**" />
-        <exclude name="org/apache/catalina/servlets/Webdav*" />
-        <exclude name="org/apache/catalina/servlets/php/**" />
-        <exclude name="org/jboss/web/rewrite/**" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-     </fileset>
-    </jar>
+    <copy todir="${build.deploy}/jbossweb-tomcat6.sar"
+       file="${sun.jstl.lib}/jstl.jar" />        
 
-    <!-- Servlets - CGI Servlet -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/servlets-cgi.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/apache/catalina/servlets/CGI*" />
+    <mkdir dir="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs"/>
+   
+    <copy todir="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs">        
+       <fileset dir="${sun.jsf.lib}">           
+          <include name="*.jar" />
+       </fileset>
+    </copy>
+
+    <!-- jar for jsf integration classes -->
+    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs/jboss-faces.jar">
+      <fileset dir="${build.classes}">
+         <include name="org/jboss/web/jsf/integration/**"/>
       </fileset>
     </jar>
 
-    <!-- Servlets - Invoker Servlet -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/servlets-invoker.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/apache/catalina/servlets/Invoker*" />
+    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/tomcat6-service.jar"
+      manifest="${build.etc}/default.mf">
+      <!-- The service classes -->
+      <fileset dir="${build.classes}">
+         <exclude name="org/jboss/**/*.properties"/>
+         <exclude name="org/jboss/web/tomcat/tc5/session/AopMarker*"/>
+         <exclude name="org/jboss/web/tomcat/tc5/session/InstanceOfAopMarker*"/>
+        <include name="org/jboss/net/**"/>
+        <include name="org/jboss/web/tomcat/filters/**"/>
+        <include name="org/jboss/web/tomcat/servlets/**"/>
+        <include name="org/jboss/web/tomcat/tc6/**"/>
+        <include name="org/jboss/web/tomcat/security/**"/>
+        <include name="org/jboss/web/tomcat/statistics/**"/>
+      </fileset>
+      <!-- Get the property-files -->
+      <fileset dir="${source.java}">
+        <include name="org/jboss/**/*.properties"/>
       </fileset>
     </jar>
-
-    <!-- Servlets - SSI Servlet -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/servlets-ssi.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/apache/catalina/ssi/**" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
+    <copy todir="${build.deploy}/jbossweb-tomcat6.sar">
+      <fileset dir="${source.webapps}">
+         <exclude name="jboss-faces.war/**"/>
       </fileset>
+    </copy>
+
+     <!-- jar for fine grained aop -->
+     <!-- package in .aop. This is used for fine-grained replication -->
+     <jar destfile="${build.lib}/tc6-cluster.aop">
+        <fileset dir="${build.classes}">
+           <include name="org/jboss/web/tomcat/tc5/session/AopMarker.class"/>
+           <include name="org/jboss/web/tomcat/tc5/session/InstanceOfAopMarker.class"/>
+        </fileset>
+        <fileset dir="${build.resources}">
+           <include name="META-INF/jboss-aop.xml"/>
+        </fileset>
+     </jar>
+     
+    <!-- jboss-web-metamodel.jar -->
+    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/jboss-web-metamodel.jar">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/web/metamodel/**"/>
+      </fileset>    
     </jar>
 
-    <!-- Servlets - Webdav Servlet -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/servlets-webdav.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/apache/catalina/servlets/Webdav*" />
-      </fileset>
-    </jar>
+   <!-- Cluster service sar and aop descriptor used for fine-grained replication -->
+  	<mkdir dir="${build.deploy}/tc6-cluster.sar/META-INF"/>
+   <copy todir="${build.deploy}/tc6-cluster.sar"
+         file="${build.lib}/tc6-cluster.aop"/>
+  	<copy tofile="${build.deploy}/tc6-cluster.sar/META-INF/jboss-service.xml"
+  	      file="${build.resources}/tc6-cluster-service.xml"/>
 
-    <!-- JBoss Web - PHP Servlet -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/servlets-php.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/apache/catalina/servlets/php/**" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-    </jar>
-
-    <!-- JBoss Web - Rewrite Valve -->
-    <jar jarfile="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar/jbossweb-rewrite.jar" index="true">
-      <fileset dir="${jbossweb.build}/classes">
-        <include name="org/jboss/web/rewrite/**" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-    </jar>
-
-</target>
-
-  <target name="clean">
-
-      <delete dir="${jbossweb.build}"/>
+    <!-- Update the build marker to allow bypassing -->
+    <touch file="${build-bypass.marker}"/>
 
   </target>
 
-  <target name="release" depends="clean,deploy">
+  <!-- ================================================================== -->
+  <!-- Cleaning                                                           -->
+  <!-- ================================================================== -->
 
-    <fixcrlf srcdir="${jbossweb.build}/${final.name}" includes="**/*.bat,**/*.txt,**/*.sh,**/*.bat,**/*.dtd,**/*.xsd,**/*.conf,**/*.properties,**/*.xml,**/*.html,**/*.jsp,**/*.css,**/MANIFEST.MF" eol="dos"/>
-
-    <zip zipfile="${jbossweb.release}/${final.name}.zip">
-      <zipfileset dir="${jbossweb.build}/${final.name}" prefix="${final.name}">
-      </zipfileset>
-    </zip>
-
-    <zip zipfile="${jbossweb.release}/${final.name}-sar.zip">
-      <zipfileset dir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" prefix="${final.name}.sar">
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}/${final.name}/docs/licenses">
-      	<include name="epl.txt" />
-      	<include name="lgpl.txt" />
-       	<include name="apache-2.0.txt" />
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}/${final.name}">
-         <include name="copyright.txt" />
-      </zipfileset>
-    </zip>
-
-    <zip zipfile="${jbossweb.release}/${final.name}-tomcat.zip">
-      <zipfileset dir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" prefix="tomcat/server/lib">
-      	 <include name="jbossweb-rewrite.jar" />
-     	 <include name="servlets-php.jar" />
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}/native" prefix="native">
-      	<include name="**" />
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}">
-      	<include name="README.txt" />
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}/${final.name}/docs/licenses">
-      	<include name="lgpl.txt" />
-      </zipfileset>
-      <zipfileset dir="${jbossweb.build}/${final.name}">
-         <include name="copyright.txt" />
-      </zipfileset>
-    </zip>
-
-    <fixcrlf srcdir="${jbossweb.build}/${final.name}" includes="**/*.bat,**/*.txt,**/*.sh,**/*.bat,**/*.dtd,**/*.xsd,**/*.conf,**/*.properties,**/*.xml,**/*.html,**/*.jsp,**/*.css,**/MANIFEST.MF" eol="unix"/>
-
-  	<tar longfile="gnu" compression="gzip"
-         tarfile="${jbossweb.release}/${final.name}.tar.gz">
-      <tarfileset dir="${jbossweb.build}/${final.name}" mode="755" prefix="${final.name}">
-        <include name="**/*.sh" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}" mode="600" prefix="${final.name}">
-        <include name="**/*.conf" />
-        <include name="**/*.xml" />
-        <include name="**/*.properties" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}" prefix="${final.name}">
-        <exclude name="**/*.sh" />
-        <exclude name="**/*.conf" />
-        <exclude name="**/*.xml" />
-        <exclude name="**/*.properties" />
-      </tarfileset>
-    </tar>
-
-  	<tar longfile="gnu" compression="gzip"
-         tarfile="${jbossweb.release}/${final.name}-sar.tar.gz">
-      <tarfileset dir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" mode="600" prefix="${final.name}.sar">
-        <include name="**/*.conf" />
-        <include name="**/*.xml" />
-        <include name="**/*.properties" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" prefix="${final.name}.sar">
-        <exclude name="**/*.sh" />
-        <exclude name="**/*.conf" />
-        <exclude name="**/*.xml" />
-        <exclude name="**/*.properties" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}/docs/licenses">
-      	<include name="epl.txt" />
-       	<include name="lgpl.txt" />
-       	<include name="apache-2.0.txt" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}">
-      	<include name="copyright.txt" />
-      </tarfileset>
-    </tar>
-
-  	<tar longfile="gnu" compression="gzip"
-         tarfile="${jbossweb.release}/${final.name}-tomcat.tar.gz">
-      <tarfileset dir="${jbossweb.build}/${final.name}/server/default/deploy/jbossweb.sar" prefix="tomcat/server/lib">
-     	 <include name="jbossweb-rewrite.jar" />
-    	 <include name="servlets-php.jar" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}">
-       	<include name="README.txt" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/native" prefix="native">
-       	<include name="**" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}/docs/licenses">
-       	<include name="lgpl.txt" />
-      </tarfileset>
-      <tarfileset dir="${jbossweb.build}/${final.name}">
-      	<include name="copyright.txt" />
-      </tarfileset>
-    </tar>
-
+  <!-- Clean up all build output -->
+  <target name="clean"
+    description="Cleans up most generated files."
+    depends="_buildmagic:clean">
   </target>
+
+  <!-- Clean up all generated files -->
+  <target name="clobber"
+    description="Cleans up all generated files."
+    depends="_buildmagic:clobber, clean">
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Misc.                                                              -->
+  <!-- ================================================================== -->
+
+  <target name="main" depends="most"
+    description="Executes the default target (most)."/>
+
+  <target name="most"
+    description="Executes the default target (jars)."
+    depends="jars"/>
+
+  <target name="all"
+    description="Builds everything."
+    depends="jars, docs"/>
+
+  <target name="help"
+    description="Show this help message."
+    depends="_buildmagic:help:standard"/>
 
 </project>
