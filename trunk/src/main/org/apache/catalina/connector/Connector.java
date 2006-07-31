@@ -641,7 +641,7 @@ public class Connector
                     ("org.apache.coyote.http11.Http11Protocol");
             } else if ("AJP/1.3".equals(protocol)) {
                 setProtocolHandlerClassName
-                    ("org.apache.jk.server.JkCoyoteHandler");
+                    ("org.apache.coyote.ajp.AjpProtocol");
             } else if (protocol != null) {
                 setProtocolHandlerClassName(protocol);
             }
