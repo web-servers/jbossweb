@@ -16,7 +16,7 @@
 
 <!-- $Id: build.xml 46423 2006-07-20 20:31:48Z asaldhana $ -->
 
-<project default="main" name="JBoss/Tomcat-5">
+<project default="main" name="JBoss/Tomcat">
 
   <!--
      | Include the common Buildmagic elements.
@@ -58,7 +58,7 @@
       <path refid="dom4j.dom4j.classpath"/>
       <path refid="oswego.concurrent.classpath"/>
       <path refid="jgroups.jgroups.classpath"/>
-      <path refid="apache.modeler.classpath"/>
+      <path refid="apache.ant.classpath"/>
       <path refid="jboss.jbossxb.classpath"/>
     </path>
 
