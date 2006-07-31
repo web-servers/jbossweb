@@ -16,7 +16,7 @@
 
 <!-- $Id: build.xml 46423 2006-07-20 20:31:48Z asaldhana $ -->
 
-<project default="main" name="JBoss/Tomcat">
+<project default="main" name="JBoss/Web">
 
   <!--
      | Include the common Buildmagic elements.
@@ -205,55 +205,83 @@
     <call target="compile"/>
 
     <mkdir dir="${build.lib}"/>
-    <mkdir dir="${build.deploy}/jbossweb-tomcat6.sar/META-INF"/>
+    <mkdir dir="${build.deploy}/jbossweb.sar/META-INF"/>
 
-    <!-- Build the jbossweb-tomcat6.sar -->
+    <!-- Build the jbossweb.sar -->
     <copy file="${build.resources}/jboss-service.xml"
-      tofile="${build.deploy}/jbossweb-tomcat6.sar/META-INF/jboss-service.xml"/>
+      tofile="${build.deploy}/jbossweb.sar/META-INF/jboss-service.xml"/>
     <copy file="${build.resources}/context.xml"
-      todir="${build.deploy}/jbossweb-tomcat6.sar"/>
+      todir="${build.deploy}/jbossweb.sar"/>
     <copy file="${build.resources}/web.xml"
-      tofile="${build.deploy}/jbossweb-tomcat6.sar/conf/web.xml"/>
+      tofile="${build.deploy}/jbossweb.sar/conf/web.xml"/>
     <copy file="${build.resources}/server.xml"
-      tofile="${build.deploy}/jbossweb-tomcat6.sar/server.xml"/>
+      tofile="${build.deploy}/jbossweb.sar/server.xml"/>
     <!-- TDI 20041108 breaks the build
     <copy file="${build.resources}/sso-channel.xml"
-       tofile="${build.deploy}/jbossweb-tomcat6.sar/sso-channel.xml" />
+       tofile="${build.deploy}/jbossweb.sar/sso-channel.xml" />
     -->
-    <copy todir="${build.deploy}/jbossweb-tomcat6.sar">
+    <copy todir="${build.deploy}/jbossweb.sar">
       <fileset dir="${apache.tomcat.lib}">
-        <include name="*.jar"/>
+        <include name="jasper-jdt.jar"/>
       </fileset>
     </copy>
     
-    <copy todir="${build.deploy}/jbossweb-tomcat6.sar"
-       file="${apache.modeler.lib}/commons-modeler.jar" />  
-
-    <copy todir="${build.deploy}/jbossweb-tomcat6.sar"
+    <copy todir="${build.deploy}/jbossweb.sar"
        file="${sun.jstl.lib}/jstl.jar" />        
 
-    <mkdir dir="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs"/>
+    <mkdir dir="${build.deploy}/jbossweb.sar/jsf-libs"/>
    
-    <copy todir="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs">        
+    <copy todir="${build.deploy}/jbossweb.sar/jsf-libs">        
        <fileset dir="${sun.jsf.lib}">           
           <include name="*.jar" />
        </fileset>
     </copy>
 
     <!-- jar for jsf integration classes -->
-    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/jsf-libs/jboss-faces.jar">
+    <jar jarfile="${build.deploy}/jbossweb.sar/jsf-libs/jboss-faces.jar">
       <fileset dir="${build.classes}">
          <include name="org/jboss/web/jsf/integration/**"/>
       </fileset>
     </jar>
 
-    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/tomcat6-service.jar"
+    <!-- Servlet 2.5 Implementation JAR File -->
+    <jar  jarfile="${build.deploy}/jbossweb.sar/servlet-api.jar">
+      <fileset dir="${build.classes}">
+        <include name="javax/servlet/*" />
+        <include name="javax/servlet/http/*" />
+        <include name="javax/servlet/resources/*" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+    <!-- JSP 2.1 Implementation JAR File -->
+    <jar  jarfile="${build.deploy}/jbossweb.sar/jsp-api.jar">
+      <fileset dir="${build.classes}">
+        <include name="javax/servlet/jsp/**" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+    <!-- JSP 2.1 EL Implementation JAR File -->
+    <jar  jarfile="${build.deploy}/jbossweb.sar/el-api.jar">
+      <fileset dir="${build.classes}">
+        <include name="javax/el/*" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+    <!-- JBoss Web service -->
+  	<jar jarfile="${build.deploy}/jbossweb.sar/jbossweb-service.jar"
       manifest="${build.etc}/default.mf">
       <!-- The service classes -->
       <fileset dir="${build.classes}">
-         <exclude name="org/jboss/**/*.properties"/>
-         <exclude name="org/jboss/web/tomcat/tc5/session/AopMarker*"/>
-         <exclude name="org/jboss/web/tomcat/tc5/session/InstanceOfAopMarker*"/>
+        <exclude name="org/jboss/**/*.properties"/>
         <include name="org/jboss/net/**"/>
         <include name="org/jboss/web/tomcat/filters/**"/>
         <include name="org/jboss/web/tomcat/servlets/**"/>
@@ -266,7 +294,81 @@
         <include name="org/jboss/**/*.properties"/>
       </fileset>
     </jar>
-    <copy todir="${build.deploy}/jbossweb-tomcat6.sar">
+  	
+    <!-- JBoss Web Metamodel -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/jbossweb-metamodel.jar">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/web/metamodel/**"/>
+      </fileset>    
+    </jar>
+
+    <!-- JBoss Web Main -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/jbossweb.jar" index="true">
+      <fileset dir="${build.classes}">
+        <exclude name="javax/**"/>
+        <exclude name="org/jboss/**"/>
+        <exclude name="org/apache/catalina/servlets/CGI*" />
+        <exclude name="org/apache/catalina/servlets/Invoker*" />
+        <exclude name="org/apache/catalina/ssi/**" />
+        <exclude name="org/apache/catalina/servlets/Webdav*" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+     </fileset>
+    </jar>
+
+    <!-- Servlets - CGI Servlet -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/servlets-cgi.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/apache/catalina/servlets/CGI*" />
+      </fileset>
+    </jar>
+
+    <!-- Servlets - Invoker Servlet -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/servlets-invoker.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/apache/catalina/servlets/Invoker*" />
+      </fileset>
+    </jar>
+
+    <!-- Servlets - SSI Servlet -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/servlets-ssi.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/apache/catalina/ssi/**" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+    <!-- Servlets - Webdav Servlet -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/servlets-webdav.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/apache/catalina/servlets/Webdav*" />
+      </fileset>
+    </jar>
+
+    <!-- JBoss Web - PHP Servlet -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/servlets-php.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/web/php/**" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+    <!-- JBoss Web - Rewrite Valve -->
+    <jar jarfile="${build.deploy}/jbossweb.sar/jbossweb-rewrite.jar" index="true">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/web/rewrite/**" />
+        <!-- Javadoc and i18n exclusions -->
+        <exclude name="**/package.html" />
+        <exclude name="**/LocalStrings_*" />
+      </fileset>
+    </jar>
+
+  	<copy todir="${build.deploy}/jbossweb.sar">
       <fileset dir="${source.webapps}">
          <exclude name="jboss-faces.war/**"/>
       </fileset>
@@ -274,30 +376,26 @@
 
      <!-- jar for fine grained aop -->
      <!-- package in .aop. This is used for fine-grained replication -->
-     <jar destfile="${build.lib}/tc6-cluster.aop">
+     <jar destfile="${build.lib}/jbossweb-cluster.aop">
         <fileset dir="${build.classes}">
-           <include name="org/jboss/web/tomcat/tc5/session/AopMarker.class"/>
-           <include name="org/jboss/web/tomcat/tc5/session/InstanceOfAopMarker.class"/>
+           <include name="org/jboss/web/tomcat/tc6/session/AopMarker.class"/>
+           <include name="org/jboss/web/tomcat/tc6/session/InstanceOfAopMarker.class"/>
         </fileset>
         <fileset dir="${build.resources}">
            <include name="META-INF/jboss-aop.xml"/>
         </fileset>
      </jar>
      
-    <!-- jboss-web-metamodel.jar -->
-    <jar jarfile="${build.deploy}/jbossweb-tomcat6.sar/jboss-web-metamodel.jar">
-      <fileset dir="${build.classes}">
-        <include name="org/jboss/web/metamodel/**"/>
-      </fileset>    
-    </jar>
-
    <!-- Cluster service sar and aop descriptor used for fine-grained replication -->
-  	<mkdir dir="${build.deploy}/tc6-cluster.sar/META-INF"/>
-   <copy todir="${build.deploy}/tc6-cluster.sar"
-         file="${build.lib}/tc6-cluster.aop"/>
-  	<copy tofile="${build.deploy}/tc6-cluster.sar/META-INF/jboss-service.xml"
+  	<mkdir dir="${build.deploy}/jbossweb-cluster.sar/META-INF"/>
+   <copy todir="${build.deploy}/jbossweb-cluster.sar"
+         file="${build.lib}/jbossweb-cluster.aop"/>
+  	<copy tofile="${build.deploy}/jbossweb-cluster.sar/META-INF/jboss-service.xml"
   	      file="${build.resources}/tc6-cluster-service.xml"/>
 
+  	<!-- JBoss Web JARs -->
+  	
+  	
     <!-- Update the build marker to allow bypassing -->
     <touch file="${build-bypass.marker}"/>
 

@@ -269,7 +269,7 @@
         <exclude name="org/apache/catalina/servlets/Invoker*" />
         <exclude name="org/apache/catalina/ssi/**" />
         <exclude name="org/apache/catalina/servlets/Webdav*" />
-        <exclude name="org/apache/catalina/servlets/php/**" />
+        <exclude name="org/jboss/web/php/**" />
         <exclude name="org/jboss/web/rewrite/**" />
         <!-- Javadoc and i18n exclusions -->
         <exclude name="**/package.html" />
