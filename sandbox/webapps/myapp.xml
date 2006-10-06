@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+  <display-name>JFC test application</display-name>
+  <description>
+     Welcome to JFC test application
+  </description>
+  <servlet>
+    <servlet-name>MySession</servlet-name>
+    <servlet-class>MySession</servlet-class>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>0</param-value>
+    </init-param>
+      <load-on-startup>6</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>TestServlet</servlet-name>
+    <servlet-class>TestServlet</servlet-class>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>wait</param-name>
+      <param-value>10</param-value>
+    </init-param>
+      <load-on-startup>6</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>TestRedirect</servlet-name>
+    <servlet-class>TestRedirect</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MyCount</servlet-name>
+    <servlet-class>MyCount</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>TestBuff</servlet-name>
+    <servlet-class>TestBuff</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>X509</servlet-name>
+    <servlet-class>X509</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MyCookies</servlet-name>
+    <servlet-class>MyCookies</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+      <servlet-name>TestServlet</servlet-name>
+      <url-pattern>/TestServlet</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>TestRedirect</servlet-name>
+      <url-pattern>/TestRedirect</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>MySession</servlet-name>
+      <url-pattern>/MySession</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>MyCount</servlet-name>
+      <url-pattern>/MyCount</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>TestBuff</servlet-name>
+      <url-pattern>/TestBuff</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>X509</servlet-name>
+      <url-pattern>/X509</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>MyCookies</servlet-name>
+      <url-pattern>/MyCookies</url-pattern>
+  </servlet-mapping>
+</web-app>

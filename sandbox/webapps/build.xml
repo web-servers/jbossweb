@@ -1,0 +1,23 @@
+<project name="JFC test application"  default="build" basedir=".">
+  <target name="build">
+    <mkdir dir="classes" />
+    <mkdir dir="lib" />
+<!--
+    <javac srcdir="src" classpath="/home/jfclere/tc6.0.x/output/build/lib/servlet-api.jar" destdir="classes" />
+  -->
+    <javac srcdir="src" classpath="/home/jfclere/apache-tomcat-5.5.17/common/lib/servlet-api.jar" destdir="classes" />
+
+    <jar destfile="./lib/myservlets.jar" basedir="./classes"/>
+
+    <war destfile="myapp.war" webxml="myapp.xml">
+      <lib dir="./lib">
+        <include name="**/myservlets.jar"/>
+      </lib>
+      <classes dir="./classes" />
+      <metainf dir="./metainf">
+        <include name="**/context.xml"/>
+      </metainf>
+    </war>
+
+  </target>
+</project>
