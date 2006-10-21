@@ -53,6 +53,10 @@
     <servlet-name>MyCookies</servlet-name>
     <servlet-class>MyCookies</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>GrowCookies</servlet-name>
+    <servlet-class>GrowCookies</servlet-class>
+  </servlet>
 
   <servlet-mapping>
       <servlet-name>TestServlet</servlet-name>
@@ -81,5 +85,9 @@
   <servlet-mapping>
       <servlet-name>MyCookies</servlet-name>
       <url-pattern>/MyCookies</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GrowCookies</servlet-name>
+      <url-pattern>/GrowCookies</url-pattern>
   </servlet-mapping>
 </web-app>
