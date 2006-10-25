@@ -62,12 +62,18 @@ public class GrowCookies extends HttpServlet {
 
         Cookie[] cookies = request.getCookies();
         int i = 0;
+        int size = 0;
         if(cookies != null) {
             for(i=0;i<cookies.length;i++) {
-                out.println("Name=" + cookies[i].getName() + "<br>");
-                out.println("Size=" + cookies[i].getValue().length() + "<br>");
+
+                size = size + cookies[i].getName().length();
+                size = size + cookies[i].getValue().length();
+
+                /* add them to the reponse */
+                response.addCookie(cookies[i]);
             }
         }
+        out.println("Size (names+values)=" + size + "<br>");
 
         /* value of the new cookie */
         StringBuffer buffer = new StringBuffer();
@@ -118,6 +124,14 @@ public class GrowCookies extends HttpServlet {
         out.print("<p><a href=\"");
 	out.print(response.encodeURL( servletname + "?dataname=foo&datavalue=bar"));
 	out.println("\" >URL encoded </a>");
+
+        out.println("<h3> received cookies </h3>");
+        if(cookies != null) {
+            for(i=0;i<cookies.length;i++) {
+                out.println("Name=" + cookies[i].getName() + "<br>");
+                out.println("Size=" + cookies[i].getValue().length() + "<br>");
+            }
+        }
 	
         out.println("</body>");
         out.println("</html>");
