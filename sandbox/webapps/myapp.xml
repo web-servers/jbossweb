@@ -59,6 +59,10 @@
     <servlet-name>GrowCookies</servlet-name>
     <servlet-class>GrowCookies</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>GrowPage</servlet-name>
+    <servlet-class>GrowPage</servlet-class>
+  </servlet>
 
   <servlet-mapping>
       <servlet-name>TestServlet</servlet-name>
@@ -91,5 +95,9 @@
   <servlet-mapping>
       <servlet-name>GrowCookies</servlet-name>
       <url-pattern>/GrowCookies</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GrowPage</servlet-name>
+      <url-pattern>/GrowPage</url-pattern>
   </servlet-mapping>
 </web-app>
