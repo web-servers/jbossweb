@@ -17,6 +17,7 @@
       <metainf dir="./metainf">
         <include name="**/context.xml"/>
       </metainf>
+      <webinf file="jboss-web.xml"/>
     </war>
 
   </target>
