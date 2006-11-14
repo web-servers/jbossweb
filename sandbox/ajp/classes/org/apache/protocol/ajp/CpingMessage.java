@@ -28,10 +28,11 @@ public final class CpingMessage extends AjpMessage
 
     public CpingMessage()
     {
+        dir  = Ajp.WS_HEADER;        
         size = Ajp.CTRL_SIZE;
         buf  = new byte[size];
         pos  = len = 5;
-        Encode.W(buf, 0, Ajp.WS_HEADER);
+        Encode.W(buf, 0, dir);
         Encode.W(buf, 2, 1);
         buf[4] = Ajp.CPING_REQUEST;
     }

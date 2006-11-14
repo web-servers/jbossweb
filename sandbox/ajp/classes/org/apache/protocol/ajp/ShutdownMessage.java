@@ -16,6 +16,8 @@
 
 package org.apache.protocol.ajp;
 
+import java.security.MessageDigest;
+
 /**
  * Shutdown AJP Protocol message.
  *
@@ -24,26 +26,59 @@ package org.apache.protocol.ajp;
 public final class ShutdownMessage extends AjpMessage
 {
 
+    private MessageDigest md = null;
+
     public ShutdownMessage()
     {
-        size = 8;
+        dir  = Ajp.WS_HEADER;
+        size = Ajp.CTRL_SIZE * 2;
         buf  = new byte[size];
-        pos  = len = 5;
-        Encode.W(buf, 0, Ajp.WS_HEADER);
+        pos  = len = Ajp.HEADER_LENGTH + 1;
+        Encode.W(buf, 0, dir);
         Encode.W(buf, 2, 1);
         buf[4] = Ajp.SHUTDOWN;
+        try {
+            md = MessageDigest.getInstance(Defaults.HASH);
+        }
+        catch(Exception e) {
+            // Nothing
+        }
+        
     }
 
     // --------------------------------------------------------- Public Methods
 
     public void reset()    
     {
-        // Reset is unusable for fixed size messages.
+        pos = len = Ajp.HEADER_LENGTH + 1;
     }
 
     public void end()
     {
         // Nothing. Everything is done in constructor.
+    }
+
+    public void setShutdownMode(int mode)
+    {
+        pos = Ajp.HEADER_LENGTH + 1;
+        buf[pos++] = (byte)mode;
+    }
+
+    /**
+     * Add Secure command to the message.
+     */
+    public void addSecure(String secret)
+        throws OverflowException
+    {
+        byte[] hash = null;
+        if (md != null) {
+            byte[] b = new byte[secret.length()];
+            Utils.convertStringToBytes(b, 0, secret);
+            md.update(b);
+            hash = md.digest();
+            md.reset();
+        }
+        addBytes(hash);
     }
 
 }

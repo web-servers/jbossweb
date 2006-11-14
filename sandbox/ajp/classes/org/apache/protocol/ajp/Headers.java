@@ -346,6 +346,15 @@ public final class Headers
             return i.intValue();
     }
 
+    public static int getAjp13RequestHeaderIndex(String header)
+    {
+        int i = getRequestHeaderIndex(header);
+        if (i > SC_REQ_AJP13_MAX)
+            return 0;
+        else
+            return i;
+    }
+
     public static int getResponseHeaderIndex(String header)
     {
         Integer i = (Integer)responseHeadersHash.get(header.toLowerCase(Locale.US));
@@ -353,6 +362,15 @@ public final class Headers
             return 0;
         else
             return i.intValue();
+    }
+
+    public static int getAjp13ResponseHeaderIndex(String header)
+    {
+        int i = getResponseHeaderIndex(header);
+        if (i > SC_RESP_AJP13_MAX)
+            return 0;
+        else
+            return i;
     }
 
     public static String getRequestHeaderName(int index)

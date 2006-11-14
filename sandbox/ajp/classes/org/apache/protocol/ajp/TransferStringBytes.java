@@ -17,34 +17,32 @@
 package org.apache.protocol.ajp;
 
 /**
- * GetHeader AJP Protocol message.
+ * AJP String Transfer Implementation.
  *
  * @author Mladen Turk
  */
-public final class GetHeaderMessage extends AjpMessage
+public class TransferStringBytes
+    implements ITransferBytes
 {
+ 
+    private String data = null;   
 
-    public GetHeaderMessage()
+    public TransferStringBytes()
+    {        
+    }
+        
+    public void transferBytes(byte[] src, int offset, int len)
     {
-        dir  = Ajp.SW_HEADER;
-        size = Ajp.CTRL_SIZE;
-        buf  = new byte[size];
-        pos  = len = 5;
-        Encode.W(buf, 0, dir);
-        Encode.W(buf, 2, 1);
-        buf[4] = Ajp.GET_HEADER;
+        char[] c = new char[len];
+        for (int i = 0; i < len; i++) {
+            c[i] = (char)src[offset + i];    
+        }
+        data = new String(c);
     }
 
-    // --------------------------------------------------------- Public Methods
-
-    public void reset()    
+    public String toString()
     {
-        // Reset is unusable for fixed size messages.
-    }
-
-    public void end()
-    {
-        // Nothing. Everything is done in constructor.
+        return data;            
     }
 
 }

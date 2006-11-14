@@ -31,7 +31,7 @@ public abstract class Service
     private InputStream         is = null;
     private OutputStream        os = null;
     
-    private Service()
+    public Service()
     {
     }
 
@@ -41,16 +41,16 @@ public abstract class Service
         os = out;
     }
 
-    public int read(byte[] b, int off, int len)
+    public int read(byte[] b, int offset, int length)
         throws IOException
     {
-        return is.read(b, off, len);    
+        return is.read(b, offset, length);    
     }
 
-    public void write(byte[] b, int off, int len)
+    public void write(byte[] b, int offset, int length)
         throws IOException
     {
-        os.write(b, off, len);    
+        os.write(b, offset, length);    
     }
 
     public void flush()
@@ -78,5 +78,6 @@ public abstract class Service
      * All cleanups shuld be done at this call.
      */
     public abstract void end();
+    
     
 }

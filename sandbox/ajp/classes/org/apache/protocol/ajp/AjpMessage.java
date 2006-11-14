@@ -54,7 +54,8 @@ public abstract class AjpMessage
      * Curent name-value pair counter.
      */
     protected int cnt;
-
+    
+    protected int dir;
 
     /**
      * Set to true if the message is encrypted
@@ -84,6 +85,12 @@ public abstract class AjpMessage
         size = data.length;
     }
 
+    public AjpMessage(byte[] data, int offset, int length)
+    {
+        buf  = data;
+        size = length;
+    }
+
     // --------------------------------------------------------- Public Methods
 
     /**
@@ -94,6 +101,16 @@ public abstract class AjpMessage
     public abstract void reset();
 
     public abstract void end();
+
+    public void setDirection(int direction)
+    {
+        dir = direction;    
+    }
+
+    public int getDirection()
+    {
+        return dir;    
+    }
 
     public void clear()
     {
@@ -205,6 +222,16 @@ public abstract class AjpMessage
         buf[pos++] = (byte)data;
     }
 
+    public byte getByte()
+    {
+        return buf[pos++];
+    }
+
+    public byte peekByte()
+    {
+        return buf[pos];
+    }
+
     public void addBytes(byte[] data, int offset, int length)
         throws OverflowException
     {
@@ -226,7 +253,7 @@ public abstract class AjpMessage
         if (data != null)
             addBytes(data, 0, data.length);
         else {
-            pos +=  Encode.W(buf, pos, 0);
+            pos += Encode.W(buf, pos, 0);
             // XXX: Is terminating zero needed for null
             buf[pos++] = 0;
         }
@@ -243,6 +270,40 @@ public abstract class AjpMessage
         pos += siz;
     }
 
+    public void addShort(int data)
+    {
+        pos += Encode.W(buf, pos, data);    
+    }
+    
+    public int getShort()
+    {
+        int rv = Decode.W(buf, pos);
+        pos += 2;
+        return rv;
+    }
+
+    public int peekShort()
+    {
+        return Decode.W(buf, pos);        
+    }
+
+    public void addBoolean(boolean data)
+    {
+        buf[pos] = (byte)(data ? 1 : 0);   
+    }
+
+    public boolean getBoolean()
+    {
+        boolean rv = Decode.Z(buf, pos);
+        pos++;
+        return rv;
+    }
+
+    public boolean peekBoolean()
+    {
+        return Decode.Z(buf, pos);
+    }
+    
     public void addString(String str)
         throws OverflowException
     {
@@ -250,6 +311,62 @@ public abstract class AjpMessage
             addString(str, 0, str.length());
         else
             addString(str, 0, 0);
+    }
+
+    public String getString()
+        throws Exception
+    {
+        int sz    = getShort();
+        String rv = Decode.S(buf, pos, sz);
+        pos      += sz;
+        // Skip terminating NUL byte.
+        pos++;            
+        return rv;
+    }
+
+    public String getResponseHeaderName()
+        throws Exception
+    {
+        String rv = null;
+        int sz = getShort();
+        if ((sz & Ajp.STRING_PREFIX) == Ajp.STRING_PREFIX) {
+            return Headers.getResponseHeaderName(sz & 0xFF);
+        }
+        else {
+            rv   = Decode.S(buf, pos, sz);
+            pos += sz;
+            // Skip terminating NUL byte.
+            pos++;            
+        }
+        return rv;
+    }
+
+    public String getRequestHeaderName()
+        throws Exception
+    {
+        String rv = null;
+        int sz = getShort();
+        if ((sz & Ajp.STRING_PREFIX) == Ajp.STRING_PREFIX) {
+            return Headers.getRequestHeaderName(sz & 0xFF);
+        }
+        else {
+            rv   = Decode.S(buf, pos, sz);
+            pos += sz;
+            // Skip terminating NUL byte.
+            pos++;            
+        }
+        return rv;
+    }
+    
+    public String getHeaderName()
+        throws Exception
+    {
+        if (dir == Ajp.WS_HEADER)
+            return getRequestHeaderName();
+        else if (dir == Ajp.SW_HEADER)
+            return getResponseHeaderName();
+        else
+            return null;
     }
 
     public String toString()

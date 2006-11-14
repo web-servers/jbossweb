@@ -26,11 +26,12 @@ public final class EndResponseMessage extends AjpMessage
 
     public EndResponseMessage(boolean reusable)
     {
+        dir  = Ajp.SW_HEADER;
         size = Ajp.CTRL_SIZE;
         buf  = new byte[size];
         pos  = len = 6;
 
-        Encode.W(buf, 0, Ajp.SW_HEADER);
+        Encode.W(buf, 0, dir);
         Encode.W(buf, 2, 2);
         buf[4] = Ajp.END_RESPONSE;
         // Set reuse to on by default

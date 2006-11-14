@@ -25,12 +25,13 @@ public final class DataMessage extends AjpMessage
 {
     public DataMessage(int size)
     {
+        dir  = Ajp.WS_HEADER;        
         size = Utils.align(size);
         pos  = len = Ajp.HEADER_LENGTH;
         if (size > Ajp.MAX_LENGTH)
             size = Ajp.MAX_LENGTH;
         buf = new byte[size];
-        Encode.W(buf, 0, Ajp.WS_HEADER);
+        Encode.W(buf, 0, dir);
         this.size = size;
     }
 

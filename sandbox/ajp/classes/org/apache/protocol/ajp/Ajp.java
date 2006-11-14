@@ -120,5 +120,7 @@ public final class Ajp
      * Offset for secure AJP protocol prefix codes
      */
     public static final byte SECURE_OFFSET      = (byte)0x80;
+    
+    public static final int  STRING_PREFIX      = 0xA000;
 
 }

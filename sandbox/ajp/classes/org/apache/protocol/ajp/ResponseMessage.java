@@ -17,34 +17,34 @@
 package org.apache.protocol.ajp;
 
 /**
- * GetHeader AJP Protocol message.
+ * Response AJP Protocol message.
  *
  * @author Mladen Turk
  */
-public final class GetHeaderMessage extends AjpMessage
+public final class ResponseMessage extends AjpMessage
 {
+ 
 
-    public GetHeaderMessage()
-    {
-        dir  = Ajp.SW_HEADER;
-        size = Ajp.CTRL_SIZE;
-        buf  = new byte[size];
-        pos  = len = 5;
-        Encode.W(buf, 0, dir);
-        Encode.W(buf, 2, 1);
-        buf[4] = Ajp.GET_HEADER;
+    public ResponseMessage()
+    {        
+        dir  = Ajp.WS_HEADER;
     }
-
+             
     // --------------------------------------------------------- Public Methods
 
-    public void reset()    
+    /**
+     * Prepare this packet for accumulating a message from the container to
+     * the web server.  Set the write position to just after the header
+     * (but leave the length unwritten, because it is as yet unknown).
+     */
+    public void reset()
     {
-        // Reset is unusable for fixed size messages.
+        pos = Ajp.HEADER_LENGTH + 1;
     }
 
     public void end()
     {
-        // Nothing. Everything is done in constructor.
     }
+    
 
 }

@@ -81,6 +81,19 @@ public abstract class Secure
         }
         return rv;
     }
+
+    protected byte[] hash(String secret)
+    {
+        byte[] rv = null;
+        if (md != null && secret != null) {
+            byte[] b = new byte[secret.length()];
+            Utils.convertStringToBytes(b, 0, secret);
+            md.update(b);
+            rv = md.digest();
+            md.reset();
+        }
+        return rv;
+    }
     
     public abstract void setKey(String secret);
 

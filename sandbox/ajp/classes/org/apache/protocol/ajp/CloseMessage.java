@@ -31,10 +31,11 @@ public final class CloseMessage extends AjpMessage
 
     public CloseMessage()
     {
+        dir  = Ajp.WS_HEADER;
         size = Ajp.CTRL_SIZE;
         buf  = new byte[size];
         pos  = len = 5;
-        Encode.W(buf, 0, Ajp.WS_HEADER);
+        Encode.W(buf, 0, dir);
         Encode.W(buf, 2, 1);
         buf[4] = Ajp.CLOSE;
     }

@@ -28,10 +28,11 @@ public final class FlushMessage extends AjpMessage
 
     public FlushMessage()
     {
+        dir  = Ajp.SW_HEADER;
         size = Ajp.CTRL_SIZE;
         buf  = new byte[size];
         pos  = len = 8;
-        Encode.W(buf, 0, Ajp.SW_HEADER);
+        Encode.W(buf, 0, dir);
         Encode.W(buf, 2, 4);
         buf[4] = Ajp.SEND_BODY_CHUNK;
     }
