@@ -314,7 +314,6 @@ public abstract class AjpMessage
     }
 
     public String getString()
-        throws Exception
     {
         int sz    = getShort();
         String rv = Decode.S(buf, pos, sz);
@@ -322,6 +321,11 @@ public abstract class AjpMessage
         // Skip terminating NUL byte.
         pos++;            
         return rv;
+    }
+    
+    public void getString(IBytesProcessor dst)
+    {
+        pos += Decode.S(buf, pos, dst);
     }
 
     public String getResponseHeaderName()

@@ -212,18 +212,18 @@ public final class Decode
         return len + 2;
     }
 
-    public static int B(byte[] buf, int offset, ITransferBytes dst, int len)
+    public static int B(byte[] buf, int offset, IBytesProcessor dst, int len)
     {
         if (dst != null)
-            dst.transferBytes(buf, offset, len);
+            dst.processBytes(buf, offset, len);
         return len;
     }
 
-    public static int B(byte[] buf, int offset, ITransferBytes dst)
+    public static int B(byte[] buf, int offset, IBytesProcessor dst)
     {
         int len = W(buf, offset);
         if (len > 0 && len != 0xFFFF && dst != null)
-            dst.transferBytes(buf, offset + 2, len);
+            dst.processBytes(buf, offset + 2, len);
         return len + 2;
     }
 
@@ -242,18 +242,18 @@ public final class Decode
         return len + 3;
     }
 
-    public static int S(byte[] buf, int offset, ITransferBytes dst, int len)
+    public static int S(byte[] buf, int offset, IBytesProcessor dst, int len)
     {
         if (dst != null)
-            dst.transferBytes(buf, offset, len);
+            dst.processBytes(buf, offset, len);
         return len + 1;
     }
 
-    public static int S(byte[] buf, int offset, ITransferBytes dst)
+    public static int S(byte[] buf, int offset, IBytesProcessor dst)
     {
         int len = W(buf, offset);
         if (len > 0 && len != 0xFFFF && dst != null)
-            dst.transferBytes(buf, offset + 2, len);
+            dst.processBytes(buf, offset + 2, len);
         return len + 3;
     }
 
