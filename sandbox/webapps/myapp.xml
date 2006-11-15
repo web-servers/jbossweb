@@ -63,6 +63,10 @@
     <servlet-name>GrowPage</servlet-name>
     <servlet-class>GrowPage</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>BigField</servlet-name>
+    <servlet-class>BigField</servlet-class>
+  </servlet>
 
   <servlet-mapping>
       <servlet-name>TestServlet</servlet-name>
@@ -99,5 +103,9 @@
   <servlet-mapping>
       <servlet-name>GrowPage</servlet-name>
       <url-pattern>/GrowPage</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>BigField</servlet-name>
+      <url-pattern>/BigField</url-pattern>
   </servlet-mapping>
 </web-app>
