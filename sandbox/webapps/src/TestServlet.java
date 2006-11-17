@@ -32,7 +32,9 @@ import javax.servlet.http.*;
 
 
 /**
- * Test servlet... Long init ;-)
+ * Test servlet...:
+ * Long init (via configuration web.xml)
+ * Long processing (via parameter).
  *
  */
 
@@ -88,12 +90,42 @@ public class TestServlet extends HttpServlet {
 
         String dataName = request.getParameter("dataname");
         String dataValue = request.getParameter("datavalue");
+        String waitValue = request.getParameter("waitvalue");
+        String countValue = request.getParameter("countvalue");
         if (dataName != null && dataValue != null) {
             session.setAttribute(dataName, dataValue);
         }
 
+        /* wait if waitvalue is set */
+        if (waitValue != null) {
+            Integer iwait = new Integer(waitValue);
+            int wait = iwait.intValue();
+            Thread me = Thread.currentThread();
+            try {
+                me.sleep(wait);
+            } catch(Exception e) {
+                throw new ServletException("sleep interrupted");
+            }
+        }
+        /* loop if countvalue is set */
+        int l = 0;
+        if (countValue != null) {
+            Integer iwait = new Integer(countValue);
+            int wait = iwait.intValue();
+            for (int i=0; i<iwait; i++) {
+                for (int j=0; j<1000000;j++) {
+                   l = l + 1;
+                }
+            }
+        }
+        l = l + l;
+
+        out.println("<P>");
+        out.println("param: countvalue " + countValue + " counted: " + l);
+        out.println("param: waitvalue " + waitValue);
         out.println("<P>");
         out.println("sessions.data<br>");
+        out.println("<P>");
         Enumeration names = session.getAttributeNames();
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement(); 
