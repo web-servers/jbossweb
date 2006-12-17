@@ -54,9 +54,17 @@ public class KeepAliveTest
                 get.setHttp11(true);
 				
 		HttpClient hc = new HttpClient();
+                int iResultCode = 0;
+
+                for (int i=0; i<1000; i++) {
+
+                    Thread.sleep(1000);
+
+                    iResultCode = hc.executeMethod(get);
+                    if (iResultCode != 200)
+                        break;
 		
-		int iResultCode = hc.executeMethod(get);
-		
+                }
 		System.out.println("iResultCode = " + iResultCode);
 
 		byte[] yaResponse = get.getResponseBody();

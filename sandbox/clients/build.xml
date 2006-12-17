@@ -17,7 +17,7 @@
     </jar>
   </target>
 
-  <target name="KeepAlive">
+  <target name="KeepAlive" depends="build">
     <java classname="KeepAliveTest"
       fork="true"
       failonerror="true"
