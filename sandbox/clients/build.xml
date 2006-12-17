@@ -1,0 +1,34 @@
+<project name="client test applications" default="build" basedir=".">
+
+  <property file="${user.home}/build.properties"/>
+  <property file="build.properties"/>
+  <property file="build.properties.default"/>
+
+  <property name="src" value="."/>
+  <property name="build" value="build"/>
+  
+  <target name="build">
+    <mkdir dir="${build}/classes"/>
+    <javac srcdir="${src}" debug="on" debuglevel="lines,vars,source"
+      classpath="${httpclient.jar}" 
+      destdir="${build}/classes"/>
+    <jar destfile="./clients.jar">
+      <fileset dir="${build}/classes"/>
+    </jar>
+  </target>
+
+  <target name="KeepAlive">
+    <java classname="KeepAliveTest"
+      fork="true"
+      failonerror="true"
+      >
+      <arg value="http://localhost:7779/"/>
+      <classpath>
+        <pathelement location="./clients.jar"/>
+        <pathelement location="${httpclient.jar}"/>
+        <pathelement location="${logging.jar}"/>
+        <pathelement location="${codec.jar}"/>
+      </classpath>
+    </java>
+  </target>
+</project>

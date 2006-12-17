@@ -1,0 +1,17 @@
+base-jakarta.loc=http://archive.apache.org/dist/jakarta
+base.path=${user.home}/java
+
+# ---- Jakarta httpclient ----
+httpclient.home=${base.path}/commons-httpclient-3.0
+httpclient.jar=${httpclient.home}/commons-httpclient-3.0.jar
+httpclient.loc=${base-jakarta.loc}/commons/httpclient/binary/commons-httpclient-3.0.tar.gz
+
+# ---- Jakarta logging ----
+logging.home=${base.path}/commons-logging-1.0.4
+logging.jar=${logging.home}/commons-logging.jar
+logging.loc=${base-jakarta.loc}/commons/logging/binaries/commons-logging-1.0.4.tar.gz
+
+# ---- Jakarta codec ---
+codec.home=${base.path}
+codec.jar=${codec.home}/commons-codec-1.3.jar
+codec.loc=${base-jakarta.loc}/commons/codec/binaries/commons-codec-1.3.tar.gz
