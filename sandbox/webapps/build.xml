@@ -19,6 +19,9 @@
       </metainf>
       <webinf file="jboss-web.xml"/>
     </war>
+    <ear destfile="myapp.ear" appxml="./metadata/application.xml">
+      <fileset dir="." includes="*.war"/>
+    </ear>
 
   </target>
 </project>
