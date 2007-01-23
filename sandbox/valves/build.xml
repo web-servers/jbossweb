@@ -1,0 +1,21 @@
+<project name="JFC test application"  default="build" basedir=".">
+  <property file="${user.home}/build.properties"/>
+  <property file="build.properties"/>
+  <property file="build.properties.default"/>
+
+  <property name="src" value="src"/>
+  <property name="build" value="build"/>
+
+  <target name="build">
+    <mkdir dir="${build}/classes" />
+    <javac srcdir="${src}" debug="on" debuglevel="lines,vars,source"
+      classpath="${catalina.base}/server/lib/catalina.jar:${catalina.base}/common/lib/servlet-api.jar"
+      destdir="${build}/classes"/>
+    <jar destfile="./valves.jar">
+      <fileset dir="${build}/classes"/>
+    </jar>
+
+  </target>
+
+</project>
+
