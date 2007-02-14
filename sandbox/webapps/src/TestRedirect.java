@@ -59,7 +59,13 @@ public class TestRedirect extends HttpServlet {
 			  "please inform system admin");
             return;
         }
-        response.sendRedirect(location);
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            session = request.getSession(true);
+        }
+        String jsessionid = session.getId();
+        String redirect = location + ";jsessionid=" + jsessionid;
+        response.sendRedirect(redirect);
     }
 
     private String decode(String encoded) {
