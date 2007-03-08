@@ -6,12 +6,11 @@
 
 <web-app>
 
-  <distributable/>
-
   <display-name>JFC test application</display-name>
   <description>
      Welcome to JFC test application
   </description>
+  <distributable/>
   <servlet>
     <servlet-name>MySession</servlet-name>
     <servlet-class>MySession</servlet-class>

@@ -77,6 +77,7 @@ public class MySession extends HttpServlet {
         String dataValue = request.getParameter("datavalue");
         if (dataName != null && dataValue != null) {
             session.setAttribute(dataName, dataValue);
+            System.out.println("MySession.java: " + dataName + " is " + dataValue);
         }
 
         out.println("<P>");
