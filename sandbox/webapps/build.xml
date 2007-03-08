@@ -18,6 +18,7 @@
         <include name="**/context.xml"/>
       </metainf>
       <webinf file="jboss-web.xml"/>
+      <fileset dir="html"/>
     </war>
     <ear destfile="myapp.ear" appxml="./metadata/application.xml">
       <fileset dir="." includes="*.war"/>
