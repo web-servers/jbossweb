@@ -70,6 +70,11 @@
     <servlet-name>TestOutputStream</servlet-name>
     <servlet-class>TestOutputStream</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>TestSlow</servlet-name>
+    <servlet-class>TestSlow</servlet-class>
+  </servlet>
+
 
   <servlet-mapping>
       <servlet-name>TestServlet</servlet-name>
@@ -114,5 +119,9 @@
   <servlet-mapping>
       <servlet-name>TestOutputStream</servlet-name>
       <url-pattern>/TestOutputStream</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>TestSlow</servlet-name>
+      <url-pattern>/TestSlow</url-pattern>
   </servlet-mapping>
 </web-app>
