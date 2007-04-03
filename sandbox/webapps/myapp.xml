@@ -74,6 +74,10 @@
     <servlet-name>TestSlow</servlet-name>
     <servlet-class>TestSlow</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>TestError</servlet-name>
+    <servlet-class>TestError</servlet-class>
+  </servlet>
 
 
   <servlet-mapping>
@@ -123,5 +127,9 @@
   <servlet-mapping>
       <servlet-name>TestSlow</servlet-name>
       <url-pattern>/TestSlow</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>TestError</servlet-name>
+      <url-pattern>/TestError</url-pattern>
   </servlet-mapping>
 </web-app>
