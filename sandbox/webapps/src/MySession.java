@@ -48,7 +48,7 @@ public class MySession extends HttpServlet {
         out.println("<body bgcolor=\"white\">");
         out.println("<head>");
 
-        String title = "sessions.title";
+        String title = "src/MySession.java";
         out.println("<title>" + title + "</title>");
         out.println("</head>");
         out.println("<body>");
@@ -129,8 +129,6 @@ public class MySession extends HttpServlet {
         out.println("</body>");
         out.println("</html>");
         
-        out.println("</body>");
-        out.println("</html>");
     }
 
     public void doPost(HttpServletRequest request,
