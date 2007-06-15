@@ -11,6 +11,7 @@
      Welcome to JFC test application
   </description>
   <distributable/>
+<!-- Servlets -->
   <servlet>
     <servlet-name>MySession</servlet-name>
     <servlet-class>MySession</servlet-class>
@@ -140,4 +141,21 @@
       <servlet-name>TestSnoop</servlet-name>
       <url-pattern>/TestSnoop</url-pattern>
   </servlet-mapping>
+
+<!-- Filter -->
+<filter>
+<filter-name>TestFilter</filter-name>
+<filter-class>TestFilter</filter-class>
+<description>Test Filter</description>
+<init-param>
+<param-name>test</param-name>
+<param-value>ake</param-value>
+</init-param>
+</filter>
+
+<filter-mapping>
+<filter-name>TestFilter</filter-name>
+<url-pattern>/*</url-pattern>
+</filter-mapping>
+
 </web-app>
