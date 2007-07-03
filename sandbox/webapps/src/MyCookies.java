@@ -80,12 +80,16 @@ public class MyCookies extends HttpServlet {
         response.addCookie(cookie6);
         Cookie cookie7 = new Cookie("Quoted4","\\\"I am\"_esting...\\\"");
         response.addCookie(cookie7);
+        Cookie cookie8 = new Cookie("Quoted5","'");
+        response.addCookie(cookie8);
+        Cookie cookie9 = new Cookie("Quoted6","A");
+        response.addCookie(cookie9);
 
         out.println("<P>");
 
         out.println("<P>");
         out.print("<form action=\"");
-	out.print(response.encodeURL("MySession"));
+	out.print(response.encodeURL("MyCookies"));
         out.print("\" ");
         out.println("method=POST>");
         out.println("sessions.dataname");
@@ -99,7 +103,7 @@ public class MyCookies extends HttpServlet {
 
         out.println("<P>GET based form:<br>");
         out.print("<form action=\"");
-	out.print(response.encodeURL("MySession"));
+	out.print(response.encodeURL("MyCookies"));
         out.print("\" ");
         out.println("method=GET>");
         out.println("sessions.dataname");
@@ -112,7 +116,7 @@ public class MyCookies extends HttpServlet {
         out.println("</form>");
 
         out.print("<p><a href=\"");
-	out.print(response.encodeURL("MySession?dataname=foo&datavalue=bar"));
+	out.print(response.encodeURL("MyCookies?dataname=foo&datavalue=bar"));
 	out.println("\" >URL encoded </a>");
 	
         out.println("</body>");
