@@ -74,8 +74,9 @@ public class MyCookies extends HttpServlet {
         response.addCookie(cookie3);
         Cookie cookie4 = new Cookie("Quoted1","\"I am testing...\"");
         response.addCookie(cookie4);
-        Cookie cookie5 = new Cookie("Quoted2","\"I_am _esting...\"");
+        Cookie cookie5 = new Cookie("Quoted2","I am \"testing...");
         response.addCookie(cookie5);
+        // A " in a not quoted-string is not ok, see rfc 2965 and 2616 */
         Cookie cookie6 = new Cookie("Quoted3","I_am\"_esting...");
         response.addCookie(cookie6);
         Cookie cookie7 = new Cookie("Quoted4","\\\"I am\"_esting...\\\"");
