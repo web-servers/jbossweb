@@ -69,6 +69,12 @@ public class TestServlet extends HttpServlet {
         out.println("<body>");
 
         out.println("<h3>" + title + "</h3>");
+        String createValue = request.getParameter("create");
+        int icreate = 0;
+        if (createValue != null) {
+            Integer iwait = new Integer(createValue);
+            icreate = iwait.intValue();
+        }
 
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -79,6 +85,11 @@ public class TestServlet extends HttpServlet {
           session.invalidate();
           // Create a new one.
           out.println("delete+create");
+          session = request.getSession(true);
+        }
+        for (int i=0; i<icreate; i++) {
+          out.println("delete+create more");
+          session.invalidate();
           session = request.getSession(true);
         }
         out.println("sessions.id " + session.getId());
@@ -123,6 +134,7 @@ public class TestServlet extends HttpServlet {
         out.println("<P>");
         out.println("param: countvalue " + countValue + " counted: " + l);
         out.println("param: waitvalue " + waitValue);
+        out.println("param: create " + createValue);
         out.println("<P>");
         out.println("sessions.data<br>");
         out.println("<P>");
