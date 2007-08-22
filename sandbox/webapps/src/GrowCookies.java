@@ -75,6 +75,14 @@ public class GrowCookies extends HttpServlet {
         }
         out.println("Size (names+values)=" + size + "<br>");
 
+        String createValue = request.getParameter("create");
+        int icreate = 1;
+        if (createValue != null) {
+            Integer iwait = new Integer(createValue);
+            icreate = iwait.intValue();
+        }
+        out.println("creates " + icreate + " new cookies");
+
         /* value of the new cookie */
         StringBuffer buffer = new StringBuffer();
         // buffer.append("<xml><name>John Doe</name><age attribute=\"this breaks\">45</age></xml>");
@@ -83,12 +91,15 @@ public class GrowCookies extends HttpServlet {
         buffer.append("<xml><name>John Doe</name><age attribute=this_breaks>45</age></xml>");
         buffer.append("<xml><name>John Doe</name><age attribute=this_breaks>45</age></xml>");
         buffer.append("<xml><name>John Doe</name><age attribute=this_breaks>45</age></xml>");
-        /* name of the new cookie */
-        String name = String.valueOf(i);
-        name.concat("Test");
 
-        Cookie cookie = new Cookie(name, buffer.toString());
-        response.addCookie(cookie);
+        for (int j=0; j<icreate; j++) {
+            /* name of the new cookie */
+            String name = String.valueOf(i + j);
+            name = name.concat("Test");
+
+            Cookie cookie = new Cookie(name, buffer.toString());
+            response.addCookie(cookie);
+        }
 
         /* Get the servlet name */
         String servletname =  request.getServletPath().substring(1);

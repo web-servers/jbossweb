@@ -37,6 +37,26 @@ import javax.servlet.http.*;
 
 public class MyCookies extends HttpServlet {
 
+    public class Test {
+      String Name;
+      String Value;
+      public Test(String Name, String Value) {
+        this.Name = Name;
+        this.Value = Value;
+      }
+    }
+    public Cookie CreateCookie(Test test) {
+      Cookie cookie = new Cookie(test.Name, test.Value);
+      return cookie;
+    }
+    public String GetVal(Test[] test, String Name) {
+      for (int i=0; i<test.length; i++) {
+        if (Name.equals(test[i].Name))
+          return test[i].Value;
+      }
+      return "Failed: Unknown";
+    }
+
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response)
         throws IOException, ServletException
@@ -57,34 +77,39 @@ public class MyCookies extends HttpServlet {
 
         out.println("<h3>" + title + "</h3>");
 
+        /*
+         * create the name/value pairs
+         */
+        Test[] mytest = new Test[10];
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<xml><name>John Doe</name><age attribute=\"this breaks\">45</age></xml>");
+        mytest[0] = new Test("xmlCookie",buffer.toString());
+        mytest[1] = new Test("Multiparam","I am testing...");
+        mytest[2] = new Test("SingleParam","I_am_testing...");
+        mytest[3] = new Test("Quoted1","\"I am testing...\"");
+        mytest[4] = new Test("Quoted2","I am \"testing...");
+        // A " in a not quoted-string is not ok, see rfc 2965 and 2616 */
+        mytest[5] = new Test("Quoted3","I_am\"_esting...");
+        mytest[6] = new Test("Quoted4","\\\"I am\"_esting...\\\"");
+        mytest[7] = new Test("Quoted5","'");
+        mytest[8] = new Test("Quoted6","A");
+        mytest[9] = new Test("Quoted7","val'ue");
+        mytest[10] = new Test("Quoted8","I am \" testing...");
+
         Cookie[] cookies = request.getCookies();
         if(cookies != null) {
             for(int i=0;i<cookies.length;i++) {
                 out.println("Name=" + cookies[i].getName() + "<br>");
                 out.println("Value=" + cookies[i].getValue() + "<br>");
+                out.println("Expected=" + GetVal(mytest, cookies[i].getName()) + "<br>");
             }
         }
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("<xml><name>John Doe</name><age attribute=\"this breaks\">45</age></xml>");
-        Cookie cookie = new Cookie("xmlCookie",buffer.toString());
-        response.addCookie(cookie);
-        Cookie cookie2 = new Cookie("Multiparam","I am testing...");
-        response.addCookie(cookie2);
-        Cookie cookie3 = new Cookie("SingleParam","I_am_testing...");
-        response.addCookie(cookie3);
-        Cookie cookie4 = new Cookie("Quoted1","\"I am testing...\"");
-        response.addCookie(cookie4);
-        Cookie cookie5 = new Cookie("Quoted2","I am \"testing...");
-        response.addCookie(cookie5);
-        // A " in a not quoted-string is not ok, see rfc 2965 and 2616 */
-        Cookie cookie6 = new Cookie("Quoted3","I_am\"_esting...");
-        response.addCookie(cookie6);
-        Cookie cookie7 = new Cookie("Quoted4","\\\"I am\"_esting...\\\"");
-        response.addCookie(cookie7);
-        Cookie cookie8 = new Cookie("Quoted5","'");
-        response.addCookie(cookie8);
-        Cookie cookie9 = new Cookie("Quoted6","A");
-        response.addCookie(cookie9);
+
+        /* create the cookies */
+        for (int i=0; i<mytest.length; i++) {
+          Cookie cookie = CreateCookie(mytest[i]);
+          response.addCookie(cookie);
+        }
 
         out.println("<P>");
 
