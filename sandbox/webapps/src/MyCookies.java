@@ -80,7 +80,7 @@ public class MyCookies extends HttpServlet {
         /*
          * create the name/value pairs
          */
-        Test[] mytest = new Test[10];
+        Test[] mytest = new Test[11];
         StringBuffer buffer = new StringBuffer();
         buffer.append("<xml><name>John Doe</name><age attribute=\"this breaks\">45</age></xml>");
         mytest[0] = new Test("xmlCookie",buffer.toString());
@@ -95,6 +95,7 @@ public class MyCookies extends HttpServlet {
         mytest[8] = new Test("Quoted6","A");
         mytest[9] = new Test("Quoted7","val'ue");
         mytest[10] = new Test("Quoted8","I am \" testing...");
+        mytest[10] = new Test("Quoted9","I am \r\n testing...");
 
         Cookie[] cookies = request.getCookies();
         if(cookies != null) {

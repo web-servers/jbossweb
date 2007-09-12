@@ -103,8 +103,16 @@ public class TestServlet extends HttpServlet {
         String dataValue = request.getParameter("datavalue");
         String waitValue = request.getParameter("waitvalue");
         String countValue = request.getParameter("countvalue");
+        String errcodeValue = request.getParameter("errcodevalue");
+
         if (dataName != null && dataValue != null) {
             session.setAttribute(dataName, dataValue);
+        }
+        /* errorcode is set */
+        if (errcodeValue != null) {
+            Integer iwait = new Integer(errcodeValue);
+            int ierrcode = iwait.intValue();
+            response.setStatus(ierrcode);
         }
 
         /* wait if waitvalue is set */
@@ -135,6 +143,7 @@ public class TestServlet extends HttpServlet {
         out.println("param: countvalue " + countValue + " counted: " + l);
         out.println("param: waitvalue " + waitValue);
         out.println("param: create " + createValue);
+        out.println("param: errcodevalue " + errcodeValue);
         out.println("<P>");
         out.println("sessions.data<br>");
         out.println("<P>");
@@ -187,6 +196,10 @@ public class TestServlet extends HttpServlet {
         
         out.println("</body>");
         out.println("</html>");
+
+        //response.addHeader(name, value);
+        response.addHeader("MYHEAD", "test\r\n casse: toto");
+        response.addHeader("TOTO", "TITI");
     }
 
     public void doPost(HttpServletRequest request,
