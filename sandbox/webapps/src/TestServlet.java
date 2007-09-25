@@ -56,9 +56,21 @@ public class TestServlet extends HttpServlet {
                       HttpServletResponse response)
         throws IOException, ServletException
     {
-        response.setContentType("text/html");
+        /* errorcode is set */
+        String errcodeValue = request.getParameter("errcodevalue");
+        int ierrcode = 0;
+        if (errcodeValue != null) {
+            Integer iwait = new Integer(errcodeValue);
+            ierrcode = iwait.intValue();
+            if (ierrcode < 0) {
+                response.sendError(-ierrcode);
+            return;
+            }
+        }
 
+        response.setContentType("text/html");
         PrintWriter out = response.getWriter();
+
         out.println("<html>");
         out.println("<body bgcolor=\"white\">");
         out.println("<head>");
@@ -103,15 +115,13 @@ public class TestServlet extends HttpServlet {
         String dataValue = request.getParameter("datavalue");
         String waitValue = request.getParameter("waitvalue");
         String countValue = request.getParameter("countvalue");
-        String errcodeValue = request.getParameter("errcodevalue");
 
         if (dataName != null && dataValue != null) {
             session.setAttribute(dataName, dataValue);
         }
+
         /* errorcode is set */
-        if (errcodeValue != null) {
-            Integer iwait = new Integer(errcodeValue);
-            int ierrcode = iwait.intValue();
+        if (ierrcode != 0) {
             response.setStatus(ierrcode);
         }
 
@@ -144,6 +154,7 @@ public class TestServlet extends HttpServlet {
         out.println("param: waitvalue " + waitValue);
         out.println("param: create " + createValue);
         out.println("param: errcodevalue " + errcodeValue);
+        out.println("negative errcodevalue should display the error page (404.html)");
         out.println("<P>");
         out.println("sessions.data<br>");
         out.println("<P>");
