@@ -43,7 +43,6 @@ public class BigField  extends HttpServlet {
     {
         response.setContentType("text/html");
 
-        InputStream in = request.getInputStream();
         PrintWriter out = response.getWriter();
         out.println("<html>");
         out.println("<body>");
@@ -65,14 +64,17 @@ public class BigField  extends HttpServlet {
         out.println("<h3>" + title + "</h3>");
         String firstName = request.getParameter("firstname");
         String lastName = request.getParameter("lastname");
-        out.println("requestparams.params-in-req" + "<br>");
         if (firstName != null || lastName != null) {
             out.println("requestparams.firstname");
             out.println(" = " + firstName + "<br>");
             out.println("requestparams.lastname");
             out.println(" = " + lastName);
         } else {
-            out.println("requestparams.no-params");
+            Enumeration e = request.getParameterNames();
+            out.println("requestparams.unex-params " + e);
+            while (e.hasMoreElements()) {
+                out.println("requestparams.unex-params name: " + e.nextElement());
+            }
         }
         out.println("<P>");
 
@@ -91,6 +93,7 @@ public class BigField  extends HttpServlet {
 */
 /* read */
         // Read the inputstream.
+        InputStream in = request.getInputStream();
         if (in!=null) {
             byte[] buff =  new byte[128];
             int i=0;
