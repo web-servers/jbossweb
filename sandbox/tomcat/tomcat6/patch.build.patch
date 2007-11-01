@@ -1,0 +1,61 @@
+Index: build.sh
+===================================================================
+--- build.sh	(revision 0)
++++ build.sh	(revision 0)
+@@ -0,0 +1,12 @@
++#
++# Shell script to build Tomcat6
++#
++# build ouput/build.
++ant download
++ant
++# build output/dist
++ant -f dist.xml
++ant -f dist.xml dist-javadoc
++# build extras and release
++ant -f extras.xml
++ant -f dist.xml release
+Index: BUILDING.txt
+===================================================================
+--- BUILDING.txt	(revision 590752)
++++ BUILDING.txt	(working copy)
+@@ -91,6 +91,8 @@
+ * NOTE: Users accessing the Internet through a proxy must use a properties
+   file to indicate to Ant the proxy configuration. Read below.
+ 
++* NOTE: This builds output/build.
++
+ * WARNING: Running this command will download binaries to the /usr/share/java 
+   directory. Make sure this is appropriate to do on your computer. On Windows, 
+   this usually corresponds to the "C:\usr\share\java" directory, unless Cygwin 
+@@ -128,11 +130,15 @@
+ The documentation can be easly built:
+ 
+     cd ${tomcat.source}
++    ant -f dist.xml
+     ant -f dist.xml dist-javadoc
+ 
++* NOTE: This builds output/dist.
++
+ (6) Building a release running tests:
+ 
+     cd ${tomcat.source}
++    ant -f extras.xml
+     ant -f dist.xml release
+ 
+-
++* NOTE: This builds output/extras and output/release.
+Index: build.xml
+===================================================================
+--- build.xml	(revision 590988)
++++ build.xml	(working copy)
+@@ -22,7 +22,9 @@
+ 
+   <!-- See "build.properties.sample" in the top level directory for all     -->
+   <!-- property values you must customize for successful building!!!        -->
++<!--
+   <property file="${user.home}/build.properties"/>
++ -->
+   <property file="build.properties"/>
+ 
+   <property file="build.properties.default"/>
