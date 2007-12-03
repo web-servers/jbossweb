@@ -66,6 +66,14 @@ public void doFilter(ServletRequest request, ServletResponse response,
     HttpServletRequest req = (HttpServletRequest)request;
     HttpServletResponse res = (HttpServletResponse)response;
 
+    // Don't call it for the TestServlet servlet
+    String path = req.getServletPath();
+    System.out.println("TestFilter.doFilter: " + path);
+    if (path.compareTo("/TestServlet") == 0) {
+        chain.doFilter(request, response);
+        return;
+    }
+
     // get action
     String action = req.getParameter("do");
     if (action == null) {

@@ -69,6 +69,7 @@ public class TestServlet extends HttpServlet {
         }
 
         response.setContentType("text/html");
+        response.setCharacterEncoding("UTF8");
         PrintWriter out = response.getWriter();
 
         out.println("<html>");
@@ -199,8 +200,19 @@ public class TestServlet extends HttpServlet {
         out.println("</form>");
 
         out.print("<p><a href=\"");
-	out.print(response.encodeURL("TestServlet?dataname=foo&datavalue=bar"));
+        String url = "TestServlet?dataname=" + dataName + "&datavalue=" + dataValue;
+	out.print(response.encodeURL(url));
 	out.println("\" >URL encoded </a>");
+	
+        out.print("<p><a href=\"");
+        url = "TestServlet?dataname=" + dataName + "&datavalue=èéâçûàAAA";
+	out.print(response.encodeURL(url));
+	out.println("\" >URL encoded with datavalue=èéâçûàAAA</a>");
+	
+        out.print("<p><a href=\"");
+        url = "TestServlet?dataname=" + dataName + "&datavalue=عربي";
+	out.print(response.encodeURL(url));
+	out.println("\" >URL encoded with datavalue=عربي</a>");
 	
         out.println("</body>");
         out.println("</html>");
@@ -217,6 +229,7 @@ public class TestServlet extends HttpServlet {
                       HttpServletResponse response)
         throws IOException, ServletException
     {
+        request.setCharacterEncoding("UTF-8");
         doGet(request, response);
     }
 
