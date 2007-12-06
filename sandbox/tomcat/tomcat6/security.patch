@@ -1,0 +1,13 @@
+Index: java/org/apache/catalina/connector/Request.java
+===================================================================
+--- java/org/apache/catalina/connector/Request.java	(revision 601766)
++++ java/org/apache/catalina/connector/Request.java	(working copy)
+@@ -2466,6 +2466,7 @@
+                     context.getLogger().debug(
+                             sm.getString("coyoteRequest.parseParameters"), e);
+                 }
++                return;
+             }
+             parameters.processParameters(formData, 0, len);
+         }
+
