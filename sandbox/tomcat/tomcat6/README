@@ -1,5 +1,7 @@
+Patch for svn: http://svn.apache.org/repos/asf/tomcat/tc6.0.x/tags/TOMCAT_6_0_15/
+
 patch.build.patch: Arrange build.
 cluster.patch: remove cluster and documentation.
 nio.patch: remove nio and documentation.
 oldjk.patch: remove the old jk code.
-security.patch: security patches included in 6.0.16
+security.patch: parameter parsing (incl in Tomcat 6.0.16)
