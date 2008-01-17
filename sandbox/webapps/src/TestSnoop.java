@@ -80,6 +80,13 @@ public class TestSnoop extends HttpServlet {
             out.println("<P>");
             System.out.println("name: " + name + " value: " + value);
          }
+        out.println("<br>contextPath: " + request.getContextPath());
+        out.println("<br>servletPath: " + request.getServletPath());
+        out.println("<br>pathInfo: " + request.getPathInfo());
+        out.println("<br>RequestURI: " + request.getRequestURI());
+        out.println("<br>RequestURL: " + request.getRequestURL());
+        out.println("<br>QueryString: " + request.getQueryString());
+
 
     }
 

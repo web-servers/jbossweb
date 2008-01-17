@@ -83,6 +83,10 @@
     <servlet-name>TestSnoop</servlet-name>
     <servlet-class>TestSnoop</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>TestDispatch</servlet-name>
+    <servlet-class>TestDispatch</servlet-class>
+  </servlet>
 
 
   <servlet-mapping>
@@ -140,6 +144,10 @@
   <servlet-mapping>
       <servlet-name>TestSnoop</servlet-name>
       <url-pattern>/TestSnoop</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>TestDispatch</servlet-name>
+      <url-pattern>/TestDispatch</url-pattern>
   </servlet-mapping>
 
 <!-- Filter -->
