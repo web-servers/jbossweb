@@ -71,6 +71,7 @@ public class TestSnoop extends HttpServlet {
         out.println(new Date(session.getLastAccessedTime()));
         System.out.println("Created: " + new Date(session.getLastAccessedTime()));
 
+        out.println("Paramters:<br>");
         Enumeration e = request.getParameterNames();
         for ( ; e.hasMoreElements() ;) {
             String name = (String) e.nextElement();
@@ -80,6 +81,18 @@ public class TestSnoop extends HttpServlet {
             out.println("<P>");
             System.out.println("name: " + name + " value: " + value);
          }
+
+        out.println("<br>Attributes:<br>");
+        e = request.getAttributeNames();
+        for ( ; e.hasMoreElements() ;) {
+            String name = (String) e.nextElement();
+            String value = (String) request.getAttribute(name);
+            out.println("<P>");
+            out.println("name: "  + name + " value: " + value);
+            out.println("<P>");
+            System.out.println("name: " + name + " value: " + value);
+         }
+
         out.println("<br>contextPath: " + request.getContextPath());
         out.println("<br>servletPath: " + request.getServletPath());
         out.println("<br>pathInfo: " + request.getPathInfo());
