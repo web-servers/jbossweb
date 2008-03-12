@@ -48,7 +48,7 @@ public class BigField  extends HttpServlet {
         out.println("<body>");
         out.println("<head>");
 
-        String title = "big input field via POST";
+        String title = "big input field via " + request.getMethod();;
         out.println("<title>" + title + "</title>");
         out.println("</head>");
         out.println("<body bgcolor=\"white\">");
@@ -62,6 +62,8 @@ public class BigField  extends HttpServlet {
         // addition of a PathInfo issue 
 	
         out.println("<h3>" + title + "</h3>");
+
+/* It is not possible to read the parameter and use The InputStream of getInputStream().
         String firstName = request.getParameter("firstname");
         String lastName = request.getParameter("lastname");
         if (firstName != null || lastName != null) {
@@ -77,6 +79,7 @@ public class BigField  extends HttpServlet {
             }
         }
         out.println("<P>");
+ */
 
 /*
         // ObjectInputStream.
@@ -116,6 +119,12 @@ public class BigField  extends HttpServlet {
         } else {
             out.println("No input");
         }
+
+        /* Try to read a user certificate */
+        Object object = request.getAttribute("javax.servlet.request.X509Certificate");
+        if (object != null)
+            out.println("<P> Has a javax.servlet.request.X509Certificate </P>");
+
 /* read */
 
         out.println("<P>");

@@ -73,6 +73,11 @@ public void doFilter(ServletRequest request, ServletResponse response,
         chain.doFilter(request, response);
         return;
     }
+    if (path.compareTo("/BigField") == 0) {
+        chain.doFilter(request, response);
+        return;
+    }
+
 
     // get action
     String action = req.getParameter("do");
