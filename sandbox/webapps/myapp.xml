@@ -150,20 +150,49 @@
       <url-pattern>/TestDispatch</url-pattern>
   </servlet-mapping>
 
-<!-- Filter -->
-<filter>
-<filter-name>TestFilter</filter-name>
-<filter-class>TestFilter</filter-class>
-<description>Test Filter</description>
-<init-param>
-<param-name>test</param-name>
-<param-value>ake</param-value>
-</init-param>
-</filter>
+  <!-- Filter -->
+  <filter>
+    <filter-name>TestFilter</filter-name>
+    <filter-class>TestFilter</filter-class>
+    <description>Test Filter</description>
+    <init-param>
+      <param-name>test</param-name>
+      <param-value>ake</param-value>
+    </init-param>
+  </filter>
 
-<filter-mapping>
-<filter-name>TestFilter</filter-name>
-<url-pattern>/*</url-pattern>
-</filter-mapping>
+  <filter-mapping>
+  <filter-name>TestFilter</filter-name>
+  <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Security testings -->
+  <security-constraint>
+    <web-resource-collection>
+    <web-resource-name>Security Tests</web-resource-name>
+    <url-pattern>/UTF8.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>manager</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <!-- Define the Login Configuration for this Application -->
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <realm-name>Tomcat Manager Application</realm-name>
+    <form-login-config>
+      <form-login-page>/login.jsp</form-login-page>
+      <form-error-page>/error/404.html</form-error-page>
+    </form-login-config>
+  </login-config>
+
+  <!-- Security roles referenced by this web application -->
+  <security-role>
+    <description>
+      The role that is required to log in to the Manager Application
+    </description>
+    <role-name>manager</role-name>
+  </security-role>
 
 </web-app>
