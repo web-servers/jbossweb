@@ -10,7 +10,23 @@
   <description>
      Welcome to JFC test application
   </description>
-  <distributable/>
+<!-- <distributable/> -->
+<!-- Filters -->
+  <filter>
+    <filter-name>TestFilter</filter-name>
+    <description>Test Filter</description>
+    <filter-class>TestFilter</filter-class>
+    <init-param>
+      <param-name>test</param-name>
+      <param-value>ake</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+  <filter-name>TestFilter</filter-name>
+  <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
 <!-- Servlets -->
   <servlet>
     <servlet-name>MySession</servlet-name>
@@ -149,22 +165,6 @@
       <servlet-name>TestDispatch</servlet-name>
       <url-pattern>/TestDispatch</url-pattern>
   </servlet-mapping>
-
-  <!-- Filter -->
-  <filter>
-    <filter-name>TestFilter</filter-name>
-    <filter-class>TestFilter</filter-class>
-    <description>Test Filter</description>
-    <init-param>
-      <param-name>test</param-name>
-      <param-value>ake</param-value>
-    </init-param>
-  </filter>
-
-  <filter-mapping>
-  <filter-name>TestFilter</filter-name>
-  <url-pattern>/*</url-pattern>
-  </filter-mapping>
 
   <!-- Security testings -->
   <security-constraint>
