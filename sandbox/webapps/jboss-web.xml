@@ -9,4 +9,9 @@
      
   </replication-config>
 
+<!-- Comment out to test virtualHosts
+<context-root>/test2</context-root>
+<virtual-host>jfcpc.gva.redhat.com</virtual-host>
+  -->
+
 </jboss-web>
