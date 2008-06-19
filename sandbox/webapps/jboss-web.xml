@@ -14,4 +14,9 @@
 <virtual-host>jfcpc.gva.redhat.com</virtual-host>
   -->
 
+  <!-- In Jboss use the jmx-console existing users -->
+  <context-root>/myapp</context-root>
+  <security-domain>java:/jaas/jmx-console</security-domain>
+
+
 </jboss-web>
