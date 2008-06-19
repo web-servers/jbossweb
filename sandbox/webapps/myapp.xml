@@ -166,11 +166,13 @@
       <url-pattern>/TestDispatch</url-pattern>
   </servlet-mapping>
 
+
   <!-- Security testings -->
   <security-constraint>
     <web-resource-collection>
     <web-resource-name>Security Tests</web-resource-name>
     <url-pattern>/UTF8.jsp</url-pattern>
+    <url-pattern>/test_form.jsp</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>manager</role-name>

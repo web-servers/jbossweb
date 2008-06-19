@@ -77,7 +77,10 @@ public void doFilter(ServletRequest request, ServletResponse response,
         chain.doFilter(request, response);
         return;
     }
-
+    if (path.endsWith(".jsp")) {
+        chain.doFilter(request, response);
+        return;
+    }
 
     // get action
     String action = req.getParameter("do");
