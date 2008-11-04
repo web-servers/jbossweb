@@ -1,0 +1,16 @@
+Patched dropped
+
+http://svn.apache.org/viewvc?rev=701358&view=rev
+Some symlink fix (too many checks needed)
+
+http://svn.apache.org/viewvc?rev=701355&view=rev
+XML parser in webapp fix (significant refactoring, partial)
+
+http://svn.apache.org/viewvc?rev=709821&view=rev
+Endline configuration for PrintWriter based on a server system property
+
+http://svn.apache.org/viewvc?rev=709018&view=rev
+Async logger is not ready
+
+http://svn.apache.org/viewvc?rev=710179&view=rev
+Invoker servlet removal
