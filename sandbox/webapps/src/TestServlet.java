@@ -82,6 +82,19 @@ public class TestServlet extends HttpServlet {
         out.println("<body>");
 
         out.println("<h3>" + title + "</h3>");
+
+
+        String testValue = request.getParameter("test");
+        if (testValue != null && testValue.compareToIgnoreCase("JBPAPP-1950")==0) {
+            /* Reset the buffer and write JBPAPP-1950 back */
+            response.reset();
+            response.setContentType("plain/text"); 
+            ServletOutputStream responseStream = response.getOutputStream();
+            responseStream.print("ok....");
+            responseStream.close();
+            return;
+        }
+
         String createValue = request.getParameter("create");
         int icreate = 0;
         if (createValue != null) {
