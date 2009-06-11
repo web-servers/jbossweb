@@ -108,9 +108,16 @@ public class MyCookies extends HttpServlet {
 
         /* create the cookies */
         for (int i=0; i<mytest.length; i++) {
-          Cookie cookie = CreateCookie(mytest[i]);
-          response.addCookie(cookie);
+          try {
+            Cookie cookie = CreateCookie(mytest[i]);
+            response.addCookie(cookie);
+          } catch (Exception ex) {
+            out.println("Cookie test: " + i + " Failed");
+          }
         }
+        Cookie cookie = new Cookie("commented", "commented cookie");
+        cookie.setComment("This is a comment");
+        response.addCookie(cookie);
 
         out.println("<P>");
 
