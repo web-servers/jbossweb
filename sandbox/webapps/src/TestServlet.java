@@ -94,6 +94,10 @@ public class TestServlet extends HttpServlet {
             responseStream.close();
             return;
         }
+        if (testValue != null && testValue.compareToIgnoreCase("NULL_HEADER")==0) {
+            response.addHeader("", "empty");
+            return;
+        }
 
         String createValue = request.getParameter("create");
         int icreate = 0;
