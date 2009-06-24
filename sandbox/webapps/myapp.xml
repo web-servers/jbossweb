@@ -179,6 +179,18 @@
     </auth-constraint>
   </security-constraint>
 
+  <!-- SSL Security testings transport-guarantee (NONE, INTEGRAL, CONFIDENTIAL)-->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>SSL Security Tests</web-resource-name>
+      <url-pattern>/ssl.jsp</url-pattern>
+    </web-resource-collection>
+    <user-data-constraint>
+      <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+
   <!-- Define the Login Configuration for this Application -->
   <login-config>
     <auth-method>FORM</auth-method>
