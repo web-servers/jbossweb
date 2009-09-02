@@ -17,8 +17,19 @@
       <metainf dir="./metainf">
         <include name="**/context.xml"/>
       </metainf>
-      <webinf file="jboss-web.xml"/>
+      <webinf dir="./metainf">
+        <include name="**/context.xml"/>
+      </webinf>
+      <webinf dir="./webinf">
+        <include name="**/jboss-web.xml"/>
+      </webinf>
+        <!--
+        <fileset dir="./metainf" includes="**/context.xml"/>
+      </webinf>
+        <fileset dir="./metainf" includes="**/toto.xml"/>
+        <fileset dir="./webinf" includes="**/jboss-web.xml"/>
       <fileset dir="html"/>
+          -->
     </war>
     <ear destfile="myapp.ear" appxml="./metadata/application.xml">
       <fileset dir="." includes="*.war"/>
