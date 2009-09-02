@@ -61,9 +61,9 @@ public class MySession extends HttpServlet {
           out.println("create");
           session = request.getSession(true);
         } else {
+          out.println("delete: " + session.getId() + " + create");
           session.invalidate();
           // Create a new one.
-          out.println("delete+create");
           session = request.getSession(true);
         }
         out.println("sessions.id " + session.getId());
