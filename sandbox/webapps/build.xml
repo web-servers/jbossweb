@@ -10,6 +10,7 @@
     <jar destfile="./lib/myservlets.jar" basedir="./classes"/>
 
     <war destfile="myapp.war" webxml="myapp.xml">
+      <fileset dir="html" />
       <lib dir="./lib">
         <include name="**/myservlets.jar"/>
       </lib>
@@ -35,5 +36,24 @@
       <fileset dir="." includes="*.war"/>
     </ear>
 
+    <war destfile="sslapp.war" webxml="sslapp.xml">
+      <fileset dir="html" />
+      <lib dir="./lib">
+        <include name="**/myservlets.jar"/>
+      </lib>
+      <classes dir="./classes" />
+      <metainf dir="./metainf">
+        <include name="**/context.xml"/>
+      </metainf>
+      <webinf dir="./metainf">
+        <include name="**/context.xml"/>
+      </webinf>
+      <webinf dir="./webinf">
+        <include name="**/jboss-web.xml"/>
+      </webinf>
+    </war>
+    <ear destfile="sslapp.ear" appxml="./metadata/application.xml">
+      <fileset dir="." includes="*.war"/>
+    </ear>
   </target>
 </project>
