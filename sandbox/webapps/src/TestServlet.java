@@ -233,9 +233,6 @@ public class TestServlet extends HttpServlet {
 	
         out.println("</body>");
         out.println("</html>");
-        
-        out.println("</body>");
-        out.println("</html>");
 
         //response.addHeader(name, value);
         response.addHeader("MYHEAD", "test\r\n casse: toto");
