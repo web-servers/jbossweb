@@ -78,7 +78,6 @@ public class CometTest
                while (len == -1) {
                    try {
                        data = in.readLine();
-                       System.out.println("Read: " + data + "...");
                        len = Integer.valueOf(data, 16);
                        System.out.println("Got: " + len);
                    } catch (Exception ex) {
@@ -93,7 +92,6 @@ public class CometTest
                while (recv != len) {
                    int i = in.read(buf, offset, len-offset);
                    recv = recv + i;
-                   System.out.println("Data: " + recv + " : " + i );
                    offset = recv;
                }
                data = new String(buf);
