@@ -5,16 +5,18 @@
 <!--
     <javac srcdir="src" classpath="/home/jfclere/tc6.0.x/output/build/lib/servlet-api.jar" destdir="classes" />
   -->
-    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/apache-tomcat-5.5.17/common/lib/servlet-api.jar" destdir="classes" />
+    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/apache-tomcat-5.5.17/common/lib/servlet-api.jar" destdir="classes" excludes="Comet*" />
 
-    <jar destfile="./lib/myservlets.jar" basedir="./classes"/>
+    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/jbossweb_trunk/output/jars/jbossweb.jar:/home/jfclere/jbossweb_trunk/output/jars/servlet-api.jar" destdir="classes" includes="Comet*" />
+
+    <jar destfile="./lib/myservlets.jar" basedir="./classes" excludes="Comet*" />
 
     <war destfile="myapp.war" webxml="myapp.xml">
       <fileset dir="html" />
       <lib dir="./lib">
         <include name="**/myservlets.jar"/>
       </lib>
-      <classes dir="./classes" />
+      <classes dir="./classes" excludes="Comet*" />
       <metainf dir="./metainf">
         <include name="**/context.xml"/>
       </metainf>
@@ -41,7 +43,7 @@
       <lib dir="./lib">
         <include name="**/myservlets.jar"/>
       </lib>
-      <classes dir="./classes" />
+      <classes dir="./classes" excludes="Comet*" />
       <metainf dir="./metainf">
         <include name="**/context.xml"/>
       </metainf>
@@ -55,5 +57,9 @@
     <ear destfile="sslapp.ear" appxml="./metadata/application.xml">
       <fileset dir="." includes="*.war"/>
     </ear>
+
+    <war destfile="comet.war" needxmlfile="false" >
+      <classes dir="./classes" includes="Comet*" />
+    </war>
   </target>
 </project>
