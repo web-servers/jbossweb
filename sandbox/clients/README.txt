@@ -1,1 +1,1 @@
-Those a client test application for webapps.
+Those are clients test application for webapps.
