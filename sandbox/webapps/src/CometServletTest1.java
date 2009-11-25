@@ -75,12 +75,15 @@ public class CometServletTest1 extends HttpServlet implements HttpEventServlet {
             // Using while (true): Not checking if input is available will trigger a blocking
             // read. No other event should be triggered (the current READ event will be in progress
             // until the read timeouts, which will trigger an ERROR event due to an IOException).
-            // while (true) {
+            int count = 0;
             while (is.available() > 0) {
-                int c = is.read();
-                count++;
+                int len = is.available();
+                byte [] buf = new byte[len];
+                int c = is.read(buf);
+                count = count + c;
+                String buff = new String(buf);
+                System.out.println("[" + event.getHttpServletRequest().getSession(true).getId() + "] READ: " + buff);
             }
-            // }
             break;
         case TIMEOUT:
             // This will cause a generic event to be sent to the servlet every time the connection is idle for
