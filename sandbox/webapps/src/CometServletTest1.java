@@ -32,6 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpSession;
 
 import org.jboss.servlet.http.HttpEvent;
 import org.jboss.servlet.http.HttpEventServlet;
@@ -43,7 +44,9 @@ public class CometServletTest1 extends HttpServlet implements HttpEventServlet {
     int count = 0;
     
     public void event(HttpEvent event) throws IOException, ServletException {
-        System.out.println("[" + event.getHttpServletRequest().getSession(true).getId() + "] " + event.getType());
+        HttpSession sess = event.getHttpServletRequest().getSession(true);
+        System.out.println("[" + sess.getId() + "] " + event.getType());
+        sess.setMaxInactiveInterval(-1);
         switch (event.getType()) {
         case BEGIN:
             event.setTimeout(1000);
