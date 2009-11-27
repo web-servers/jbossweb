@@ -61,17 +61,14 @@ public class CometServletTest1 extends HttpServlet implements HttpEventServlet {
             // Using while (true): Not checking if the connection is available to writing immediately
             // will cause the write to be performed in blocking mode.
             // boolean b = true;
-            // while (b) {
+            String sessid = sess.getId();
             while (event.isWriteReady()) {
                 if (count % 100 == 0) {
-                    os.println((count++) + " ");
+                    os.println("[" + sessid + "] " + (count++) + " ");
                 } else {
-                    os.print((count++) + " ");
+                    os.print("[" + sessid + "] " + (count++) + " ");
                 }
             }
-            // }
-            //if (event.ready())
-            //    os.flush();
             break;
         case READ:
             ServletInputStream is = event.getHttpServletRequest().getInputStream();

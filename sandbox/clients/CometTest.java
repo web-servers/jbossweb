@@ -59,9 +59,21 @@ public class CometTest
 
                 InputStream is = s.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is));
+                String sess = null;
                 while (true) {
 	            writechunk(os, "Testing...");
                     String res = readchunk(in);
+                    String cursess = readsess(res);
+                    if (sess != null && cursess.compareTo(sess) != 0) {
+                        System.out.println("Session changed: " + cursess + " " + sess);
+                        break;
+                    }
+                    if (sess == null)
+                       sess = cursess;
+                    if (sess == null) {
+                        System.out.println("Can't find Session");
+                        break;
+                    }
                 }
 
 	}
@@ -95,7 +107,30 @@ public class CometTest
                    offset = recv;
                }
                data = new String(buf);
-               System.out.println("DATA: " + recv + " : " + data);
+               // System.out.println("DATA: " + recv + " : " + data);
+               return data;
+        }
+        static String readsess(String in)
+        {
+               String data = null;
+               int start = in.indexOf('[');
+               if (start != -1) {
+                   int end = in.indexOf(']');
+                   if (end != -1) {
+                        if (end > start) {
+                            data = in.substring(start+1, end);
+                        } else {
+                            start = in.indexOf('[', end);
+                            if (start != -1) {
+                                end = in.indexOf(']', start);
+                                if (end != -1) {
+                                    data = in.substring(start+1, end);
+                                }
+                            }
+                        }
+                   }
+               }
+               System.out.println("SESSION: " + data);
                return data;
         }
 }
