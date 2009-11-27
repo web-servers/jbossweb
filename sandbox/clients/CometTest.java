@@ -24,10 +24,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Random;
 
-public class CometTest 
+public class CometTest extends Thread
 {
 
+    String strURL = "http://localhost:8080/comet/CometServletTest1";
+    Exception ex = null;
+    int max = 0;
+    boolean failed = true;
     /**
      *  
      * Usage:
@@ -37,15 +42,50 @@ public class CometTest
      *                 Argument 0 is a URL to a web server
      * 
      */
-	public static void main(String[] args) throws Exception
+    public static void main(String[] args) throws Exception
+    {
+	if (args.length != 1)
 	{
-		if (args.length != 1)
-		{
-			System.err.println("missing command line arguments");
-			System.exit(1);
-		}
+		System.err.println("missing command line arguments");
+		System.exit(1);
+	}
 		
-		String strURL = args[0];
+	String strURL = args[0];
+        CometTest comet[] = new CometTest[150];
+        for (int i=0; i<comet.length; i++) {
+            comet[i] = new CometTest(strURL, 1000);
+        }
+        for (int i=0; i<comet.length; i++) {
+            comet[i].start();
+        }
+        for (int i=0; i<comet.length; i++) {
+            comet[i].join();
+            if (comet[i].failed) {
+	        System.err.println("Test failed! " + comet[i].ex);
+	        System.exit(1);
+            }
+        }
+    }
+    public CometTest(String strURL, int max)
+    {
+        this.strURL = strURL;
+        Random generator = new Random();
+        this.max = generator.nextInt( max );
+    }
+    /**
+      * Run the test
+      */
+    
+    public void run()
+    {
+    	try {
+    		runit();
+    	} catch (Exception ex) {
+    	    this.ex = ex;
+    	}
+    }
+    public void runit()throws Exception
+        {
 
 		URL u = new URL(strURL);
                 Socket s = new Socket(u.getHost(), u.getPort());
@@ -60,7 +100,7 @@ public class CometTest
                 InputStream is = s.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is));
                 String sess = null;
-                while (true) {
+                while (max>0) {
 	            writechunk(os, "Testing...");
                     String res = readchunk(in);
                     String cursess = readsess(res);
@@ -74,7 +114,10 @@ public class CometTest
                         System.out.println("Can't find Session");
                         break;
                     }
+                    max--;
                 }
+                if (max == 0)
+                    failed = false;
 
 	}
         /* Write chunk a "" is the last chunk */
@@ -91,7 +134,7 @@ public class CometTest
                    try {
                        data = in.readLine();
                        len = Integer.valueOf(data, 16);
-                       System.out.println("Got: " + len);
+                       // System.out.println("Got: " + len);
                    } catch (Exception ex) {
                        System.out.println("Ex: " + ex);
                    }
@@ -130,7 +173,7 @@ public class CometTest
                         }
                    }
                }
-               System.out.println("SESSION: " + data);
+               // System.out.println("SESSION: " + data);
                return data;
         }
 }
