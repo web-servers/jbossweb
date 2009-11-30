@@ -79,16 +79,16 @@ public class CometTest extends Thread
     public void run()
     {
     	try {
-    		runit();
+		URL u = new URL(strURL);
+                Socket s = new Socket(u.getHost(), u.getPort());
+    		runit(s, u);
     	} catch (Exception ex) {
     	    this.ex = ex;
     	}
     }
-    public void runit()throws Exception
+    public void runit(Socket s, URL u)throws Exception
         {
 
-		URL u = new URL(strURL);
-                Socket s = new Socket(u.getHost(), u.getPort());
                 OutputStream os = s.getOutputStream();
                 os.write(("POST " + u.getPath() + " HTTP/1.1\n").getBytes());
                 os.write(("User-Agent: " + CometTest.class.getClass().getName() + " (chunked-test)\n").getBytes());
