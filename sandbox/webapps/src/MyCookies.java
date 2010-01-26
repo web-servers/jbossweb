@@ -65,6 +65,13 @@ public class MyCookies extends HttpServlet {
 
         response.setContentType("text/html");
 
+        Enumeration names = request.getHeaderNames();
+        System.out.println("Header: " + names);
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
+            System.out.println("Header: " + name + " : " + request.getHeader(name));
+        }        
+
         PrintWriter out = response.getWriter();
         out.println("<html>");
         out.println("<body bgcolor=\"white\">");
