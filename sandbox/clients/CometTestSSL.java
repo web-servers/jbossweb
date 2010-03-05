@@ -57,6 +57,7 @@ public class CometTestSSL extends CometTest
 	if (args.length != 1)
 	{
 		System.err.println("missing command line arguments");
+                System.err.println("CometTestSSL URL");
 		System.exit(1);
 	}
 		
@@ -72,6 +73,7 @@ public class CometTestSSL extends CometTest
             comet[i].join();
             if (comet[i].failed) {
 	        System.err.println("Test failed! " + comet[i].ex);
+                comet[i].ex.printStackTrace();
 	        System.exit(1);
             }
         }

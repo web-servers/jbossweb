@@ -33,6 +33,7 @@ public class CometTest extends Thread
     Exception ex = null;
     int max = 0;
     boolean failed = true;
+    String lastPartialSess = null;
     /**
      *  
      * Usage:
@@ -104,7 +105,7 @@ public class CometTest extends Thread
 	            writechunk(os, "Testing...");
                     String res = readchunk(in);
                     String cursess = readsess(res);
-                    if (sess != null && cursess.compareTo(sess) != 0) {
+                    if (sess != null && (cursess == null || sess.compareTo(cursess) != 0)) {
                         System.out.println("Session changed: " + cursess + " " + sess);
                         break;
                     }
@@ -133,10 +134,15 @@ public class CometTest extends Thread
                while (len == -1) {
                    try {
                        data = in.readLine();
+                       // System.out.println("DATA (len): " +  data);
                        len = Integer.valueOf(data, 16);
-                       // System.out.println("Got: " + len);
                    } catch (Exception ex) {
                        System.out.println("Ex: " + ex);
+                   } finally {
+                       if (len == 0) {
+                            System.out.println("End chunk");
+                            throw new Exception("End chunk");
+                       }
                    }
                }
                len++; // For the CR...
@@ -147,19 +153,21 @@ public class CometTest extends Thread
                while (recv != len) {
                    int i = in.read(buf, offset, len-offset);
                    recv = recv + i;
+                   // System.out.println("DATA: " + recv + ":" + len);
                    offset = recv;
                }
                data = new String(buf);
                // System.out.println("DATA: " + recv + " : " + data);
+               // System.out.println("DATA: " + recv);
                return data;
         }
-        static String readsess(String in)
+        static String getsess(String in)
         {
                String data = null;
                int start = in.indexOf('[');
                if (start != -1) {
-                   int end = in.indexOf(']');
-                   if (end != -1) {
+                    int end = in.indexOf(']');
+                    if (end != -1) {
                         if (end > start) {
                             data = in.substring(start+1, end);
                         } else {
@@ -171,9 +179,35 @@ public class CometTest extends Thread
                                 }
                             }
                         }
-                   }
+                    }
                }
-               // System.out.println("SESSION: " + data);
+               return data;
+        }
+        String readsess(String input)
+        {
+               String data = null;
+               String in = input;
+              
+               data = getsess(in); 
+               if (data == null) {
+                    /* A small chunk without a complete sessionid */
+                    if (this.lastPartialSess == null)
+                        this.lastPartialSess = input;
+                    else
+                        this.lastPartialSess = this.lastPartialSess + input;
+                    in = this.lastPartialSess;
+                    data = getsess(in);
+               }
+               /* Store the last part of session (for the next "small" chunk) */
+               if (data != null) {
+                    int start = in.lastIndexOf("["+data+"]");
+                    if (start>=0)
+                        this.lastPartialSess = in.substring(start);
+                    else
+                        this.lastPartialSess = null;
+               }
+               if (data == null)
+                   System.out.println("SESSION not found in: " + in);
                return data;
         }
 }
