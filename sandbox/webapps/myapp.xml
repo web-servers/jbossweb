@@ -209,4 +209,10 @@
     <role-name>manager</role-name>
   </security-role>
 
+  <env-entry>
+    <env-entry-name>test</env-entry-name>
+    <env-entry-value>Toto</env-entry-value>
+    <env-entry-type>java.lang.String</env-entry-type>
+  </env-entry>
+
 </web-app>

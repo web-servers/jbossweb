@@ -29,6 +29,9 @@ import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 
 /**
@@ -97,6 +100,19 @@ public class TestServlet extends HttpServlet {
         if (testValue != null && testValue.compareToIgnoreCase("NULL_HEADER")==0) {
             response.addHeader("", "empty");
             return;
+        }
+        if (testValue != null && testValue.compareToIgnoreCase("JNDI")==0) {
+            out.println("<p>JNDI: <br/>");
+            try {
+                Context initCtx = new InitialContext();
+                Context envCtx = (Context) initCtx.lookup("java:comp/env");
+                String value = (String) envCtx.lookup("test"); 
+                out.println("JNDI test: " + value);
+                envCtx.close();
+            } catch (NamingException ne) {
+                out.println("JNDI test exception: " + ne);
+            }
+            out.println("</p>");
         }
 
         String createValue = request.getParameter("create");
@@ -171,6 +187,7 @@ public class TestServlet extends HttpServlet {
         out.println("param: countvalue " + countValue + " counted: " + l);
         out.println("param: waitvalue " + waitValue);
         out.println("param: create " + createValue);
+        out.println("param: test " + testValue);
         out.println("param: errcodevalue " + errcodeValue);
         out.println("negative errcodevalue should display the error page (404.html)");
         out.println("<P>");
