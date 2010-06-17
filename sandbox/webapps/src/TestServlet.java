@@ -104,6 +104,7 @@ public class TestServlet extends HttpServlet {
         if (testValue != null && testValue.compareToIgnoreCase("JNDI")==0) {
             out.println("<p>JNDI: <br/>");
             try {
+                /* Look in ../webapps/myapp.xml (web.xml) */
                 Context initCtx = new InitialContext();
                 Context envCtx = (Context) initCtx.lookup("java:comp/env");
                 String value = (String) envCtx.lookup("test"); 
