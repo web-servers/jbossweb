@@ -69,6 +69,23 @@ public class TestOutputStream  extends HttpServlet {
             e.printStackTrace();
         }
     }
+    public void doTest3(HttpServletRequest request,
+                      HttpServletResponse response)
+        throws IOException, ServletException
+    {
+        response.setContentType("text/html");
+        OutputStream outs = response.getOutputStream();
+        for (;;) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            for (int i=0; i<90112;i++)
+               baos.write('A');
+        
+            baos.writeTo(outs);
+            outs.flush();
+        }
+        // outs.close();
+    }
+
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response)
         throws IOException, ServletException
@@ -88,12 +105,15 @@ public class TestOutputStream  extends HttpServlet {
             out.println("<h3>" + title + "</h3>");
             out.println("use bla?test=1 for outputstream<br/>");
             out.println("use bla?test=2 for closing it<br/>");
+            out.println("use bla?test=3 for endless write<br/>");
             out.println("</body>");
             out.println("</html>");
         } else if (test.equals("1")) {
             doTest1(request, response);
         } else if (test.equals("2")) {
             doTest2(request, response);
+        } else if (test.equals("3")) {
+            doTest3(request, response);
         }
     }
 
