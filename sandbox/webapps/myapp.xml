@@ -30,6 +30,7 @@
 <!-- Servlets -->
   <servlet>
     <servlet-name>MySession</servlet-name>
+    <display-name>installerDownload</display-name>
     <servlet-class>MySession</servlet-class>
     <init-param>
       <param-name>debug</param-name>
@@ -88,10 +89,6 @@
     <servlet-class>TestOutputStream</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>TestSlow</servlet-name>
-    <servlet-class>TestSlow</servlet-class>
-  </servlet>
-  <servlet>
     <servlet-name>TestError</servlet-name>
     <servlet-class>TestError</servlet-class>
   </servlet>
@@ -102,6 +99,10 @@
   <servlet>
     <servlet-name>TestDispatch</servlet-name>
     <servlet-class>TestDispatch</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>NPEDemoServlet</servlet-name>
+    <servlet-class>NPEDemoServlet</servlet-class>
   </servlet>
 
 
@@ -150,10 +151,6 @@
       <url-pattern>/TestOutputStream</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-      <servlet-name>TestSlow</servlet-name>
-      <url-pattern>/TestSlow</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
       <servlet-name>TestError</servlet-name>
       <url-pattern>/TestError</url-pattern>
   </servlet-mapping>
@@ -165,7 +162,14 @@
       <servlet-name>TestDispatch</servlet-name>
       <url-pattern>/TestDispatch</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>NPEDemoServlet</servlet-name>
+      <url-pattern>/NPEDemoServlet</url-pattern>
+  </servlet-mapping>
 
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
 
   <!-- Security testings -->
   <security-constraint>
