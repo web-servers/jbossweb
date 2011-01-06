@@ -45,8 +45,11 @@ public class TestServlet extends HttpServlet {
 
     public void init(ServletConfig config) throws ServletException {
         String swait = config.getInitParameter("wait");
-        Integer iwait = new Integer(swait);
-        int wait = iwait.intValue();
+        int wait = 10;
+        if (swait != null) {
+            Integer iwait = new Integer(swait);
+            wait = iwait.intValue();
+        }
         Thread me = Thread.currentThread();
         try {
             me.sleep(wait);
