@@ -92,7 +92,7 @@ public class MyCookies extends HttpServlet {
         /*
          * create the name/value pairs
          */
-        Test[] mytest = new Test[14];
+        Test[] mytest = new Test[15];
         StringBuffer buffer = new StringBuffer();
         buffer.append("<xml><name>John Doe</name><age attribute=\"this breaks\">45</age></xml>");
         mytest[0] = new Test("xmlCookie",buffer.toString());
@@ -111,6 +111,7 @@ public class MyCookies extends HttpServlet {
         // mytest[12] = new Test("Equal","P=I am = Equal\n...&A=46164");
         mytest[12] = new Test("Equal","P=14662+26891+20253+28934+15744+22344+43641+13624+28974+15489+35353+47293+14662+26891+20253+28934+28596+27065+28648+22542&L=60766+6654+19186+43352+58684+61932+37440+23672&A=46164+56607+41861+51054&S=46164+56607+41861+51054&T=23922+55384+5601+51160+38643+36027+49212+16265+61873+55260+16665+53468&X=12795+26412+43746+37688&U=47207+55215+24609+16813+46164+56607+41861+51054&D=36080+20612+7827+5411+35188+54326+19636+46695+27748+646+37165+34626&C=11656+47389+63649+49622+46164+56607+41861+51054&"); 
         mytest[13] = new Test("RH-Test-Cookie" , "testcookie::aftercolon; expires=Fri, 31 Dec 2010 23:59:59 GMT; path=/");
+        mytest[14] = new Test("RH-Test-Cookie2" , "testcookie::aftercolon");
         Cookie[] cookies = request.getCookies();
         if(cookies != null) {
             for(int i=0;i<cookies.length;i++) {
