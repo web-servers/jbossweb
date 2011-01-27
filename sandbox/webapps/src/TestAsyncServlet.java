@@ -45,7 +45,7 @@ import javax.servlet.AsyncEvent;
 // @WebServlet("/TestAsyncServlet")
 @WebServlet(urlPatterns = {"/TestAsyncServlet"}, asyncSupported = true)
 public class TestAsyncServlet extends HttpServlet {
-   public void doPost(HttpServletRequest req, HttpServletResponse res) {
+   public void doGet(HttpServletRequest req, HttpServletResponse res) {
         // Servlet Code
         // ...........
         // Call startAsync
@@ -53,26 +53,31 @@ public class TestAsyncServlet extends HttpServlet {
         // Give AsyncContext to the Listener MonListener
         context.addListener(new MonListener());
         // ...........
+        context.complete();
    }
    public class MonListener implements AsyncListener {
 
-       public  void onComplete(AsyncEvent event) {
+       public  void onComplete(AsyncEvent event) throws IOException {
          System.out.println("onComplete");
+          event.getAsyncContext().getResponse().getWriter().println("onComplete");
        }
-       public  void onError(AsyncEvent event) {
+       public  void onError(AsyncEvent event) throws IOException {
          ServletResponse res = event.getSuppliedResponse();
          System.out.println("onError: " + res);
+         event.getAsyncContext().getResponse().getWriter().println("onError");
        }
-       public  void onTimeout(AsyncEvent event) {
+       public  void onTimeout(AsyncEvent event) throws IOException {
          ServletResponse res = event.getSuppliedResponse();
          try {
            ServletOutputStream os = res.getOutputStream();
            System.out.println("onTimeout: " + res);
          } catch (Exception e) {
          }
+         event.getAsyncContext().getResponse().getWriter().println("onTimeout");
        }
-       public  void onStartAsync(AsyncEvent event) {
+       public  void onStartAsync(AsyncEvent event) throws IOException {
          System.out.println("onStartAsync");
+         event.getAsyncContext().getResponse().getWriter().println("onStartAsync");
        }
    }
 
