@@ -130,6 +130,7 @@ public class MyCookies extends HttpServlet {
                 response.addCookie(cookie);
               } catch (Exception ex) {
                 out.println("Cookie test: " + i + " Failed<br>");
+                out.println(ex + "<br>");
               }
             }
             Cookie cookie = new Cookie("commented", "commented cookie");
