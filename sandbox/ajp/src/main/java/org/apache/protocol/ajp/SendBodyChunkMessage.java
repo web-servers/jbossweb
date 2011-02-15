@@ -31,6 +31,7 @@ public final class SendBodyChunkMessage extends AjpMessage
         size = data.length;
         pos  = len = Ajp.HEADER_LENGTH;
         Encode.W(buf, 0, dir);
+        Encode.W(buf, 2, size-4);
         buf[4] = Ajp.SEND_BODY_CHUNK;
     }
 
