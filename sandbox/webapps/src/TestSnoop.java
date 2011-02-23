@@ -99,7 +99,9 @@ public class TestSnoop extends HttpServlet {
         out.println("<br>RequestURI: " + request.getRequestURI());
         out.println("<br>RequestURL: " + request.getRequestURL());
         out.println("<br>QueryString: " + request.getQueryString());
-
+        out.println("<br>LocalPort: " + request.getLocalPort());
+        out.println("<br>LocalAddr: " + request.getLocalAddr());
+        out.println("<br>LocalName: " + request.getLocalName());
 
     }
 
