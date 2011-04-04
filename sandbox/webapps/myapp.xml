@@ -100,11 +100,6 @@
     <servlet-name>TestDispatch</servlet-name>
     <servlet-class>TestDispatch</servlet-class>
   </servlet>
-  <servlet>
-    <servlet-name>NPEDemoServlet</servlet-name>
-    <servlet-class>NPEDemoServlet</servlet-class>
-  </servlet>
-
 
   <servlet-mapping>
       <servlet-name>TestServlet</servlet-name>
@@ -161,10 +156,6 @@
   <servlet-mapping>
       <servlet-name>TestDispatch</servlet-name>
       <url-pattern>/TestDispatch</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-      <servlet-name>NPEDemoServlet</servlet-name>
-      <url-pattern>/NPEDemoServlet</url-pattern>
   </servlet-mapping>
 
   <welcome-file-list>
