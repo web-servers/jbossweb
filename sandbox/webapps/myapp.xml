@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!DOCTYPE web-app
-    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
-    "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+   version="2.5">
 
-<web-app>
-
-  <display-name>JFC test application</display-name>
   <description>
      Welcome to JFC test application
   </description>
+  <display-name>JFC test application</display-name>
 <!-- <distributable/> -->
 <!-- Filters -->
   <filter>
     <filter-name>TestFilter</filter-name>
-    <description>Test Filter</description>
     <filter-class>TestFilter</filter-class>
     <init-param>
       <param-name>test</param-name>
@@ -30,7 +28,6 @@
 <!-- Servlets -->
   <servlet>
     <servlet-name>MySession</servlet-name>
-    <display-name>installerDownload</display-name>
     <servlet-class>MySession</servlet-class>
     <init-param>
       <param-name>debug</param-name>
@@ -162,6 +159,18 @@
     <welcome-file>index.jsp</welcome-file>
   </welcome-file-list>
 
+      <!--
+  <jsp-config>
+    <jsp-property-group>
+      <description>Test EL</description>
+      <display-name>JSPConfiguration</display-name>
+      <url-pattern>*.jsp</url-pattern>
+      <el-ignored>false</el-ignored>
+      <scripting-invalid>false</scripting-invalid>
+    </jsp-property-group>
+  </jsp-config>
+       -->
+
   <!-- Security testings -->
   <security-constraint>
     <web-resource-collection>
@@ -206,8 +215,8 @@
 
   <env-entry>
     <env-entry-name>test</env-entry-name>
-    <env-entry-value>Toto</env-entry-value>
     <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>Toto</env-entry-value>
   </env-entry>
 
 </web-app>
