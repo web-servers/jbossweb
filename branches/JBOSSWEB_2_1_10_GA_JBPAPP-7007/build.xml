@@ -99,7 +99,6 @@
         source="${compile.source}"
         target="${compile.target}"
         excludes="**/CVS/**,**/.svn/**">
-      <compilerarg value="-Xlint:unchecked"/>
 <!-- Comment this in to show unchecked warnings:     <compilerarg value="-Xlint:unchecked"/> -->
       <classpath refid="tomcat.classpath" />
     </javac>
@@ -791,10 +790,7 @@
         deprecation="${compile.deprecation}"
         source="${compile.source}"
         target="${compile.target}"
-        excludes="**/CVS/**,**/.svn/**"
-        nowarn="on"
-        failonerror="false">
-		<compilerarg value="-Xlint:-unchecked"/>
+        excludes="**/CVS/**,**/.svn/**">
       <include name="**" />
     </javac>
     <jar jarfile="${tomcat-dbcp.jar}"
