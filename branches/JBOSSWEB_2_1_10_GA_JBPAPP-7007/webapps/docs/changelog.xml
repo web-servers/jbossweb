@@ -29,6 +29,14 @@
       </fix>
     </changelog>
   </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        EL escaping fixes. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+
 </section>
 
 <section name="JBoss Web 2.1.9.GA (remm)">
@@ -60,6 +68,13 @@
     <changelog>
       <fix>
         <jira>165</jira>: Correct fix for <bug>42727</bug>. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>49081</bug>: EL parsing fix. (markt)
       </fix>
     </changelog>
   </subsection>
