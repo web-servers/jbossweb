@@ -12,15 +12,15 @@
 # ----- Version Control Flags -----
 version.major=2
 version.minor=1
-version.build=12
+version.build=13
 version.patch=0
-version.tag=SNAPSHOT
+version.tag=TEST
 
 # ----- Default Base Path for Dependent Packages -----
 # Please note this path must be absolute, not relative,
 # as it is referenced with different working directory
 # contexts by the various build scripts.
-base.path=/usr/share/java
+base.path=/home/jfclere/java
 #base.path=C:/path/to/the/repository
 #base.path=/usr/local
 
