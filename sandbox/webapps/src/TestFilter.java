@@ -81,6 +81,18 @@ public void doFilter(ServletRequest request, ServletResponse response,
         chain.doFilter(request, response);
         return;
     }
+    if (path.compareTo("/MyCount") == 0) {
+        chain.doFilter(request, response);
+        HttpServletResponse resp = (HttpServletResponse)response;
+        if (resp.containsHeader("SET-COOKIE")) {
+            String secure = "; Secure";
+            String sessionid = req.getSession().getId();
+            String contextPath = req.getContextPath();
+            System.out.println("TestFilter.doFilter: " + sessionid);
+            resp.setHeader("SET-COOKIE", "JSESSIONID=" + sessionid + "; Path=" + contextPath + "; HttpOnly" + secure);
+        }
+        return;
+    }
 
     // get action
     String action = req.getParameter("do");
