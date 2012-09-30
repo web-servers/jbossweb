@@ -5,18 +5,22 @@
 <!--
     <javac srcdir="src" classpath="/home/jfclere/tc6.0.x/output/build/lib/servlet-api.jar" destdir="classes" />
   -->
-    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/apache-tomcat-5.5.17/common/lib/servlet-api.jar" destdir="classes" excludes="Comet*,MyServletContextListener*,TestAsync*" />
+    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/apache-tomcat-5.5.17/common/lib/servlet-api.jar" destdir="classes" excludes="Comet*,MyServletContextListener*,TestAsync*,Upgrade00ServletTest*,Login*" />
 
-    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/jbossweb_trunk/output/jars/jbossweb.jar:/home/jfclere/jbossweb_trunk/output/jars/servlet-api.jar" destdir="classes" includes="Comet*,MyServletContextListener*,TestAsync*" />
+    <javac srcdir="src" debug="on" debuglevel="lines,vars,source" classpath="/home/jfclere/jbossweb_trunk/output/jars/jbossweb.jar:/home/jfclere/.m2/repository/org/jboss/spec/javax/servlet/jboss-servlet-api_3.0_spec/1.0.1.Final/jboss-servlet-api_3.0_spec-1.0.1.Final.jar" destdir="classes" includes="Comet*,MyServletContextListener*,TestAsync*,Upgrade00ServletTest*,Login*" />
 
-    <jar destfile="./lib/myservlets.jar" basedir="./classes" excludes="Comet*,MyServletContextListener*,TestAsync*" />
+    <jar destfile="./lib/myservlets.jar" basedir="./classes" excludes="Comet*,MyServletContextListener*,TestAsync*,Upgrade00ServletTest*,Login*" />
 
     <war destfile="myapp.war" webxml="myapp.xml">
       <fileset dir="html" />
       <lib dir="./lib">
         <include name="**/myservlets.jar"/>
       </lib>
-      <classes dir="./classes" excludes="Comet*" />
+      <classes dir="./classes" excludes="Comet*"/>
+      <classes dir=".">
+        <include name="**/users.properties"/>
+        <include name="**/roles.properties"/>
+      </classes>
       <metainf dir="./metainf">
         <include name="**/context.xml"/>
       </metainf>
