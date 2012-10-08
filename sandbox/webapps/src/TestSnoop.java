@@ -71,8 +71,22 @@ public class TestSnoop extends HttpServlet {
         out.println(new Date(session.getLastAccessedTime()));
         System.out.println("Created: " + new Date(session.getLastAccessedTime()));
 
+        System.out.println("Content length: " + request.getContentLength());
+        System.out.println("getParameterNames: " + request.getParameterNames());
+
         out.println("Paramters:<br>");
         Enumeration e = request.getParameterNames();
+        System.out.println("getParameterNames: " + e.hasMoreElements());
+        if (request.getContentLength() == 1030) {
+            ServletInputStream in = request.getInputStream();
+            for (;;) {
+                byte[] buff = new byte[128];
+                if (in.readLine(buff,0,128)==-1) {
+                    out.println("<br>End of posted data");
+                    break;
+                }
+            }
+        }
         for ( ; e.hasMoreElements() ;) {
             String name = (String) e.nextElement();
             String value = request.getParameter(name);
@@ -86,7 +100,12 @@ public class TestSnoop extends HttpServlet {
         e = request.getAttributeNames();
         for ( ; e.hasMoreElements() ;) {
             String name = (String) e.nextElement();
-            String value = (String) request.getAttribute(name);
+            String value = "";
+            try {
+                value = (String) request.getAttribute(name);
+            } catch (Exception ex) {
+                ex.printStackTrace(out);
+            }
             out.println("<P>");
             out.println("name: "  + name + " value: " + value);
             out.println("<P>");
@@ -102,6 +121,8 @@ public class TestSnoop extends HttpServlet {
         out.println("<br>LocalPort: " + request.getLocalPort());
         out.println("<br>LocalAddr: " + request.getLocalAddr());
         out.println("<br>LocalName: " + request.getLocalName());
+        out.println("<br>Secure: "    + request.isSecure());
+        out.println("<br>Secure: "    + request.getScheme());
 
     }
 
