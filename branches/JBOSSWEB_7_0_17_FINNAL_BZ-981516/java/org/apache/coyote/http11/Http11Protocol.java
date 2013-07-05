@@ -72,6 +72,9 @@ public class Http11Protocol
     protected static StringManager sm =
         StringManager.getManager(Constants.Package);
 
+    private static final Object syncInitLock = new Object();
+    private boolean SYNC_INIT = Boolean.valueOf(System.getProperty("org.apache.coyote.http11.Http11Protocol.SYNC_INIT")).booleanValue();
+
 
     // ------------------------------------------------------------ Constructor
 
@@ -157,43 +160,88 @@ public class Http11Protocol
     }
 
     public void init() throws Exception {
-        endpoint.setName(getName());
-        endpoint.setHandler(cHandler);
+        if(!SYNC_INIT) {
+            endpoint.setName(getName());
+            endpoint.setHandler(cHandler);
 
-        // Verify the validity of the configured socket factory
-        try {
-            if (isSSLEnabled()) {
-                sslImplementation =
-                    SSLImplementation.getInstance(sslImplementationName);
-                socketFactory = sslImplementation.getServerSocketFactory();
-                endpoint.setServerSocketFactory(socketFactory);
-            } else if (socketFactoryName != null) {
-                socketFactory = (ServerSocketFactory) Class.forName(socketFactoryName).newInstance();
-                endpoint.setServerSocketFactory(socketFactory);
+            // Verify the validity of the configured socket factory
+            try {
+                if (isSSLEnabled()) {
+                    sslImplementation =
+                        SSLImplementation.getInstance(sslImplementationName);
+                    socketFactory = sslImplementation.getServerSocketFactory();
+                    endpoint.setServerSocketFactory(socketFactory);
+                } else if (socketFactoryName != null) {
+                    socketFactory = (ServerSocketFactory) Class.forName(socketFactoryName).newInstance();
+                    endpoint.setServerSocketFactory(socketFactory);
+                }
+            } catch (Exception ex) {
+                log.error(sm.getString("http11protocol.socketfactory.initerror"),
+                          ex);
+                throw ex;
             }
-        } catch (Exception ex) {
-            log.error(sm.getString("http11protocol.socketfactory.initerror"),
-                      ex);
-            throw ex;
-        }
 
-        if (socketFactory!=null) {
-            Iterator<String> attE = attributes.keySet().iterator();
-            while( attE.hasNext() ) {
-                String key = attE.next();
-                Object v=attributes.get(key);
-                socketFactory.setAttribute(key, v);
+            if (socketFactory!=null) {
+                Iterator<String> attE = attributes.keySet().iterator();
+                while( attE.hasNext() ) {
+                    String key = attE.next();
+                    Object v=attributes.get(key);
+                    socketFactory.setAttribute(key, v);
+                }
             }
-        }
         
-        try {
-            endpoint.init();
-        } catch (Exception ex) {
-            log.error(sm.getString("http11protocol.endpoint.initerror"), ex);
-            throw ex;
+            try {
+                endpoint.init();
+            } catch (Exception ex) {
+                log.error(sm.getString("http11protocol.endpoint.initerror"), ex);
+                throw ex;
+            }
+            if (log.isDebugEnabled())
+                log.debug(sm.getString("http11protocol.init", getName()));
+        } else {
+            synchronized ( syncInitLock ){
+                if (log.isTraceEnabled())
+                    log.trace("Doing sync http init");
+
+                endpoint.setName(getName());
+                endpoint.setHandler(cHandler);
+
+                // Verify the validity of the configured socket factory
+                try {
+                    if (isSSLEnabled()) {
+                        sslImplementation =
+                            SSLImplementation.getInstance(sslImplementationName);
+                        socketFactory = sslImplementation.getServerSocketFactory();
+                        endpoint.setServerSocketFactory(socketFactory);
+                    } else if (socketFactoryName != null) {
+                        socketFactory = (ServerSocketFactory) Class.forName(socketFactoryName).newInstance();
+                        endpoint.setServerSocketFactory(socketFactory);
+                    }
+                } catch (Exception ex) {
+                    log.error(sm.getString("http11protocol.socketfactory.initerror"),
+                              ex);
+                    throw ex;
+                }
+
+                if (socketFactory!=null) {
+                    Iterator<String> attE = attributes.keySet().iterator();
+                    while( attE.hasNext() ) {
+                        String key = attE.next();
+                        Object v=attributes.get(key);
+                        socketFactory.setAttribute(key, v);
+                    }
+                }
+        
+                try {
+                    endpoint.init();
+                } catch (Exception ex) {
+                    log.error(sm.getString("http11protocol.endpoint.initerror"), ex);
+                    throw ex;
+                }
+                if (log.isDebugEnabled())
+                    log.debug(sm.getString("http11protocol.init", getName()));
+            }
         }
-        if (log.isDebugEnabled())
-            log.debug(sm.getString("http11protocol.init", getName()));
 
     }
 
