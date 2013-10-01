@@ -49,7 +49,7 @@ import java.io.UnsupportedEncodingException;
  *
  * @version $Id: FileItem.java 1533 2010-08-18 10:01:08Z remy.maucherat@jboss.com $
  */
-public interface FileItem {
+public interface FileItem extends FileItemHeadersSupport {
 
 
     // ------------------------------- Methods from javax.activation.DataSource
