@@ -532,15 +532,6 @@ public class FormAuthenticator
             }
             contentType.setString(savedContentType);
             request.getCoyoteRequest().setContentType(contentType);
-        } else {
-            // Restore the parameters.
-            Iterator params = saved.getParameterNames();
-            while (params.hasNext()) {
-                String name = (String) params.next();
-                request.addParameter(name,
-                        saved.getParameterValues(name));
-            }
-
         }
         request.getCoyoteRequest().method().setString(method);
 
