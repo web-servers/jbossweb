@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -128,7 +129,7 @@ public class NioEndpoint extends AbstractEndpoint {
 	 * @return the amount of threads that are managed by the pool
 	 */
 	public int getCurrentThreadCount() {
-		return curThreads;
+	    return (this.executor instanceof ThreadPoolExecutor) ? ((ThreadPoolExecutor) this.executor).getPoolSize() : getCurThreads();
 	}
 
 	/**
@@ -137,7 +138,7 @@ public class NioEndpoint extends AbstractEndpoint {
 	 * @return the amount of threads currently busy
 	 */
 	public int getCurrentThreadsBusy() {
-		return curThreadsBusy;
+	    return (this.executor instanceof ThreadPoolExecutor) ? ((ThreadPoolExecutor) this.executor).getActiveCount() : getCurThreadsBusy();
 	}
 
 	/**
