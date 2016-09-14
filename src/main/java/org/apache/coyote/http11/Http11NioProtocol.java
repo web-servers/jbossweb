@@ -807,81 +807,80 @@ public class Http11NioProtocol extends Http11AbstractProtocol {
 		 * .AsynchronousSocketChannel, org.apache.tomcat.util.net.ChannelStatus)
 		 */
 		@Override
-		// FIXME: probably needs sync due to concurrent read/write possibilities
 		public SocketState event(NioChannel channel, SocketStatus status) {
 
 			Http11NioProcessor processor = connections.get(channel.getId());
 			SocketState state = SocketState.CLOSED;
 			if (processor != null) {
-				processor.startProcessing();
-				// Call the appropriate event
-				try {
-					state = processor.event(status);
-				} catch (java.net.SocketException e) {
-					// SocketExceptions are normal
-				    CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
-				} catch (java.io.IOException e) {
-					// IOExceptions are normal
-                    CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
-				}
-				// Future developers: if you discover any other
-				// rare-but-nonfatal exceptions, catch them here, and log as
-				// above.
-				catch (Throwable e) {
-					// any other exception or error is odd. Here we log it
-					// with "ERROR" level, so it will show up even on
-					// less-than-verbose logs.
-                    CoyoteLogger.HTTP_NIO_LOGGER.socketError(e);
-				} finally {
-					if (state != SocketState.LONG) {
-						connections.remove(channel.getId());
-						recycledProcessors.offer(processor);
-						if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
-							final NioChannel ch = channel;
-							proto.endpoint.removeEventChannel(ch);
-							try {
-								ch.awaitRead(proto.getKeepAliveTimeout(), TimeUnit.MILLISECONDS,
-										proto.endpoint,
-										new CompletionHandler<Integer, NioEndpoint>() {
+			    synchronized (processor) {
+			        processor.startProcessing();
+			        // Call the appropriate event
+			        try {
+			            state = processor.event(status);
+			        } catch (java.net.SocketException e) {
+			            // SocketExceptions are normal
+			            CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
+			        } catch (java.io.IOException e) {
+			            // IOExceptions are normal
+			            CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
+			        }
+			        // Future developers: if you discover any other
+			        // rare-but-nonfatal exceptions, catch them here, and log as
+			        // above.
+			        catch (Throwable e) {
+			            // any other exception or error is odd. Here we log it
+			            // with "ERROR" level, so it will show up even on
+			            // less-than-verbose logs.
+			            CoyoteLogger.HTTP_NIO_LOGGER.socketError(e);
+			        } finally {
+			            if (state != SocketState.LONG) {
+			                connections.remove(channel.getId());
+			                recycledProcessors.offer(processor);
+			                if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
+			                    final NioChannel ch = channel;
+			                    proto.endpoint.removeEventChannel(ch);
+			                    try {
+			                        ch.awaitRead(proto.getKeepAliveTimeout(), TimeUnit.MILLISECONDS,
+			                                proto.endpoint,
+			                                new CompletionHandler<Integer, NioEndpoint>() {
 
-											@Override
-											public void completed(Integer nBytes,
-													NioEndpoint endpoint) {
-												if (nBytes < 0) {
-													failed(new ClosedChannelException(), endpoint);
-												} else {
-													if (!endpoint.processChannel(ch, null)) {
-													    endpoint.closeChannel(ch);
-													}
-												}
-											}
+			                            @Override
+			                            public void completed(Integer nBytes,
+			                                    NioEndpoint endpoint) {
+			                                if (nBytes < 0) {
+			                                    failed(new ClosedChannelException(), endpoint);
+			                                } else {
+			                                    if (!endpoint.processChannel(ch, null)) {
+			                                        endpoint.closeChannel(ch);
+			                                    }
+			                                }
+			                            }
 
-											@Override
-											public void failed(Throwable exc, NioEndpoint endpoint) {
-												endpoint.closeChannel(ch);
-											}
-										});
-							} catch (Exception exp) {
-								// NOPE
-							}
-						}
-	                    processor.endProcessing();
-					} else {
-					    if (processor.isAvailable() && processor.getReadNotifications()) {
-					        // Call a read event right away
-					        state = event(channel, SocketStatus.OPEN_READ);
-		                    processor.endProcessing();
-					    } else if (proto.endpoint.isRunning()) {
-					        synchronized (processor) {
-					            proto.endpoint.addEventChannel(channel, processor.getTimeout(),
-					                    false,
-					                    processor.getWriteNotification(),
-					                    processor.getResumeNotification(), false);
-					            processor.endProcessing();
-					        }
-					    }
-					}
-				}
+			                            @Override
+			                            public void failed(Throwable exc, NioEndpoint endpoint) {
+			                                endpoint.closeChannel(ch);
+			                            }
+			                        });
+			                    } catch (Exception exp) {
+			                        // NOPE
+			                    }
+			                }
+			                processor.endProcessing();
+			            } else {
+			                if (processor.isAvailable() && processor.getReadNotifications()) {
+			                    // Call a read event right away
+			                    state = event(channel, SocketStatus.OPEN_READ);
+			                    processor.endProcessing();
+			                } else if (proto.endpoint.isRunning()) {
+			                    proto.endpoint.addEventChannel(channel, processor.getTimeout(),
+			                            false,
+			                            processor.getWriteNotification(),
+			                            processor.getResumeNotification(), false);
+			                    processor.endProcessing();
+			                }
+			            }
+			        }
+			    }
 			}
 
 			return state;
@@ -897,63 +896,65 @@ public class Http11NioProtocol extends Http11AbstractProtocol {
 		@Override
 		public SocketState process(NioChannel channel) {
 			Http11NioProcessor processor = recycledProcessors.poll();
-			try {
-				if (processor == null) {
-					processor = createProcessor();
-				}
-                processor.startProcessing();
+            if (processor == null) {
+                processor = createProcessor();
+            }
+            synchronized (processor) {
+                try {
+                    processor.startProcessing();
 
-                if (proto.secure && (proto.sslImplementation != null)) {
-					processor.setSSLSupport(((NioJSSEImplementation) proto.sslImplementation).getSSLSupport(channel));
-				} else {
-					processor.setSSLSupport(null);
-				}
+                    if (proto.secure && (proto.sslImplementation != null)) {
+                        processor.setSSLSupport(((NioJSSEImplementation) proto.sslImplementation).getSSLSupport(channel));
+                    } else {
+                        processor.setSSLSupport(null);
+                    }
 
-				SocketState state = processor.process(channel);
+                    SocketState state = processor.process(channel);
 
-				if (state == SocketState.LONG) {
-					// Associate the connection with the processor. The next
-					// request processed by this thread will use either a new or
-					// a recycled processor.
-					connections.put(channel.getId(), processor);
+                    if (state == SocketState.LONG) {
+                        // Associate the connection with the processor. The next
+                        // request processed by this thread will use either a new or
+                        // a recycled processor.
+                        connections.put(channel.getId(), processor);
 
-					if (processor.isAvailable() && processor.getReadNotifications()) {
-						// Call a read event right away
-					    state = event(channel, SocketStatus.OPEN_READ);
-		                processor.endProcessing();
-					} else {
-					    synchronized (processor) {
-					        proto.endpoint.addEventChannel(channel, processor.getTimeout(),
-					                processor.getReadNotifications(), false,
-					                processor.getResumeNotification(), false);
-					        processor.endProcessing();
-					    }
-					}
-				} else {
-					recycledProcessors.offer(processor);
-	                processor.endProcessing();
-				}
-				return state;
+                        if (processor.isAvailable() && processor.getReadNotifications()) {
+                            // Call a read event right away
+                            state = event(channel, SocketStatus.OPEN_READ);
+                            processor.endProcessing();
+                        } else {
+                            synchronized (processor) {
+                                proto.endpoint.addEventChannel(channel, processor.getTimeout(),
+                                        processor.getReadNotifications(), false,
+                                        processor.getResumeNotification(), false);
+                                processor.endProcessing();
+                            }
+                        }
+                    } else {
+                        recycledProcessors.offer(processor);
+                        processor.endProcessing();
+                    }
+                    return state;
 
-			} catch (IOException e) {
-				if (e instanceof java.net.SocketException) {
-					// SocketExceptions are normal
-                    CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
-				} else {
-					// IOExceptions are normal
-                    CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
-				}
-			}
-			// Future developers: if you discover any other
-			// rare-but-non-fatal exceptions, catch them here, and log as
-			// above.
-			catch (Throwable e) {
-				// any other exception or error is odd. Here we log it
-				// with "ERROR" level, so it will show up even on
-				// less-than-verbose logs.
-                CoyoteLogger.HTTP_NIO_LOGGER.socketError(e);
-			}
-            processor.endProcessing();
+                } catch (IOException e) {
+                    if (e instanceof java.net.SocketException) {
+                        // SocketExceptions are normal
+                        CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
+                    } else {
+                        // IOExceptions are normal
+                        CoyoteLogger.HTTP_NIO_LOGGER.socketException(e);
+                    }
+                }
+                // Future developers: if you discover any other
+                // rare-but-non-fatal exceptions, catch them here, and log as
+                // above.
+                catch (Throwable e) {
+                    // any other exception or error is odd. Here we log it
+                    // with "ERROR" level, so it will show up even on
+                    // less-than-verbose logs.
+                    CoyoteLogger.HTTP_NIO_LOGGER.socketError(e);
+                }
+                processor.endProcessing();
+            }
 			recycledProcessors.offer(processor);
 			return SocketState.CLOSED;
 		}

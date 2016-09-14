@@ -405,11 +405,68 @@ public class AjpAprProtocol
             AjpAprProcessor result = connections.get(socket);
             SocketState state = SocketState.CLOSED; 
             if (result != null) {
-                result.startProcessing();
-                // Call the appropriate event
+                synchronized (result) {
+                    result.startProcessing();
+                    // Call the appropriate event
+                    try {
+                        state = result.event(status);
+                    } catch (java.net.SocketException e) {
+                        // SocketExceptions are normal
+                        CoyoteLogger.AJP_LOGGER.socketException(e);
+                    } catch (java.io.IOException e) {
+                        // IOExceptions are normal
+                        CoyoteLogger.AJP_LOGGER.socketException(e);
+                    }
+                    // Future developers: if you discover any other
+                    // rare-but-nonfatal exceptions, catch them here, and log as
+                    // above.
+                    catch (Throwable e) {
+                        // any other exception or error is odd. Here we log it
+                        // with "ERROR" level, so it will show up even on
+                        // less-than-verbose logs.
+                        CoyoteLogger.AJP_LOGGER.socketError(e);
+                    } finally {
+                        if (state != SocketState.LONG) {
+                            connections.remove(socket);
+                            recycledProcessors.offer(result);
+                            if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
+                                proto.endpoint.getPoller().add(socket);
+                            }
+                        } else {
+                            if (proto.endpoint.isRunning()) {
+                                proto.endpoint.getEventPoller().add(socket, result.getTimeout(), 
+                                        false, false, result.getResumeNotification(), false);
+                            }
+                        }
+                        result.endProcessing();
+                    }
+                }
+            }
+            return state;
+        }
+        
+        public SocketState process(long socket) {
+            AjpAprProcessor processor = recycledProcessors.poll();
+            if (processor == null) {
+                processor = createProcessor();
+            }
+            synchronized (processor) {
                 try {
-                    state = result.event(status);
-                } catch (java.net.SocketException e) {
+
+                    SocketState state = processor.process(socket);
+                    if (state == SocketState.LONG) {
+                        // Associate the connection with the processor. The next request 
+                        // processed by this thread will use either a new or a recycled
+                        // processor.
+                        connections.put(socket, processor);
+                        proto.endpoint.getEventPoller().add(socket, processor.getTimeout(), false, 
+                                false, processor.getResumeNotification(), false);
+                    } else {
+                        recycledProcessors.offer(processor);
+                    }
+                    return state;
+
+                } catch(java.net.SocketException e) {
                     // SocketExceptions are normal
                     CoyoteLogger.AJP_LOGGER.socketException(e);
                 } catch (java.io.IOException e) {
@@ -424,61 +481,7 @@ public class AjpAprProtocol
                     // with "ERROR" level, so it will show up even on
                     // less-than-verbose logs.
                     CoyoteLogger.AJP_LOGGER.socketError(e);
-                } finally {
-                    if (state != SocketState.LONG) {
-                        connections.remove(socket);
-                        recycledProcessors.offer(result);
-                        if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
-                            proto.endpoint.getPoller().add(socket);
-                        }
-                    } else {
-                        if (proto.endpoint.isRunning()) {
-                            proto.endpoint.getEventPoller().add(socket, result.getTimeout(), 
-                                    false, false, result.getResumeNotification(), false);
-                        }
-                    }
-                    result.endProcessing();
                 }
-            }
-            return state;
-        }
-        
-        public SocketState process(long socket) {
-            AjpAprProcessor processor = recycledProcessors.poll();
-            try {
-
-                if (processor == null) {
-                    processor = createProcessor();
-                }
-
-                SocketState state = processor.process(socket);
-                if (state == SocketState.LONG) {
-                    // Associate the connection with the processor. The next request 
-                    // processed by this thread will use either a new or a recycled
-                    // processor.
-                    connections.put(socket, processor);
-                    proto.endpoint.getEventPoller().add(socket, processor.getTimeout(), false, 
-                            false, processor.getResumeNotification(), false);
-                } else {
-                    recycledProcessors.offer(processor);
-                }
-                return state;
-
-            } catch(java.net.SocketException e) {
-                // SocketExceptions are normal
-                CoyoteLogger.AJP_LOGGER.socketException(e);
-            } catch (java.io.IOException e) {
-                // IOExceptions are normal
-                CoyoteLogger.AJP_LOGGER.socketException(e);
-            }
-            // Future developers: if you discover any other
-            // rare-but-nonfatal exceptions, catch them here, and log as
-            // above.
-            catch (Throwable e) {
-                // any other exception or error is odd. Here we log it
-                // with "ERROR" level, so it will show up even on
-                // less-than-verbose logs.
-                CoyoteLogger.AJP_LOGGER.socketError(e);
             }
             recycledProcessors.offer(processor);
             return SocketState.CLOSED;
