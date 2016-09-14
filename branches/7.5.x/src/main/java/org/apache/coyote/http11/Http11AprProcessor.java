@@ -1260,27 +1260,33 @@ public class Http11AprProcessor implements ActionHook {
         } else if (actionCode == ActionCode.ACTION_EVENT_SUSPEND) {
             readNotifications = false;
         } else if (actionCode == ActionCode.ACTION_EVENT_RESUME) {
-            readNotifications = true;
-            // An event is being processed already: adding for resume will be done
-            // when the socket gets back to the poller
-            if (!eventProcessing && !resumeNotification) {
-                endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+            synchronized (this) {
+                readNotifications = true;
+                // An event is being processed already: adding for resume will be done
+                // when the socket gets back to the poller
+                if (!eventProcessing && !resumeNotification) {
+                    endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+                }
+                resumeNotification = true;
             }
-            resumeNotification = true;
         } else if (actionCode == ActionCode.ACTION_EVENT_WAKEUP) {
-            // An event is being processed already: adding for resume will be done
-            // when the socket gets back to the poller
-            if (!eventProcessing && !resumeNotification) {
-                endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+            synchronized (this) {
+                // An event is being processed already: adding for resume will be done
+                // when the socket gets back to the poller
+                if (!eventProcessing && !resumeNotification) {
+                    endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+                }
+                resumeNotification = true;
             }
-            resumeNotification = true;
         } else if (actionCode == ActionCode.ACTION_EVENT_WRITE) {
-            // An event is being processed already: adding for write will be done
-            // when the socket gets back to the poller
-            if (!eventProcessing && !writeNotification) {
-                endpoint.getEventPoller().add(socket, timeout, false, true, false, true);
+            synchronized (this) {
+                // An event is being processed already: adding for write will be done
+                // when the socket gets back to the poller
+                if (!eventProcessing && !writeNotification) {
+                    endpoint.getEventPoller().add(socket, timeout, false, true, false, true);
+                }
+                writeNotification = true;
             }
-            writeNotification = true;
         } else if (actionCode == ActionCode.ACTION_EVENT_TIMEOUT) {
             timeout = ((Integer) param).intValue();
         } else if (actionCode == ActionCode.ACTION_EVENT_READ_BEGIN) {
@@ -1290,10 +1296,12 @@ public class Http11AprProcessor implements ActionHook {
         } else if (actionCode == ActionCode.ACTION_EVENT_WRITE_BEGIN) {
             Socket.timeoutSet(socket, 0);
             outputBuffer.setNonBlocking(true);
-            if (!eventProcessing && !writeNotification) {
-                endpoint.getEventPoller().add(socket, timeout, false, true, false, true);
+            synchronized (this) {
+                if (!eventProcessing && !writeNotification) {
+                    endpoint.getEventPoller().add(socket, timeout, false, true, false, true);
+                }
+                writeNotification = true;
             }
-            writeNotification = true;
         } else if (actionCode == ActionCode.UPGRADE) {
             // Switch to raw bytes mode
             inputBuffer.removeActiveFilters();
