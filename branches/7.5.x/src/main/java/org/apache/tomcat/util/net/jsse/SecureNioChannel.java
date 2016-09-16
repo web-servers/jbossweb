@@ -132,17 +132,16 @@ public class SecureNioChannel extends NioChannel {
 				throw new ClosedChannelException();
 			}
 		}
-		// Unwrap the data read, and return the number of unwrapped bytes
-		int result = unwrap(this.netInBuffer, dst);
-		if (result == 0) {
-		    // Try reading since it means an underflow
+        // Unwrap the data read, and return the number of unwrapped bytes
+        int result = 0;
+        while ((result = unwrap(this.netInBuffer, dst)) == 0) {
+            // Try reading since it means an underflow
             int x = channel.read(this.netInBuffer).get(timeout, unit);
             if (x < 0) {
                 throw new ClosedChannelException();
             }
-            result = unwrap(this.netInBuffer, dst);
-		}
-		return result;
+        }
+        return result;
 	}
 
 	/*
