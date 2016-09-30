@@ -380,6 +380,7 @@ public class CoyoteAdapter
             ;
         } catch (Throwable t) {
             CatalinaLogger.CONNECTOR_LOGGER.exceptionDuringService(t);
+            response.setStatus(500);
         } finally {
             req.getRequestProcessor().setWorkerThreadName(null);
             // Recycle the wrapper request and response
