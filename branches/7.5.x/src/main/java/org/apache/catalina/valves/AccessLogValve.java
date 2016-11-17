@@ -40,11 +40,11 @@ import javax.servlet.http.HttpSession;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
+import org.apache.catalina.Session;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.LifecycleSupport;
 import org.apache.coyote.RequestInfo;
-import org.jboss.logging.Logger;
 import org.jboss.web.CatalinaLogger;
 
 
@@ -1165,15 +1165,15 @@ public class AccessLogValve
     protected class SessionIdElement implements AccessLogElement {
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-            if (request != null) {
-                if (request.getSession(false) != null) {
-                    buf.append(request.getSessionInternal(false)
-                            .getIdInternal());
-                } else {
-                    buf.append('-');
-                }
-            } else {
+            if (request == null) {
                 buf.append('-');
+            } else {
+                Session session = request.getSessionInternal(false);
+                if (session == null) {
+                    buf.append('-');
+                } else {
+                    buf.append(session.getIdInternal());
+                }
             }
         }
     }
