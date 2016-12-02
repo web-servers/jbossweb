@@ -295,4 +295,7 @@ public interface CoyoteMessages {
     @Message(id = 2085, value = "Maximum swallow size is exceeded")
     IOException maxSwallowSizeExceeded();
 
+    @Message(id = 2086, value = "Invalid request line")
+    IllegalArgumentException invalidRequestLine();
+
 }

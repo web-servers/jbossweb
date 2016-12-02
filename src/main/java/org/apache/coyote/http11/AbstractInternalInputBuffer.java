@@ -29,6 +29,7 @@ import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.apache.tomcat.util.http.parser.HttpParser;
 
 /**
  * {@code AbstractInternalInputBuffer}
@@ -327,6 +328,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 			if (buf[pos] == Constants.SP || buf[pos] == Constants.HT) {
 				space = true;
 				request.method().setBytes(buf, start, pos - start);
+            } else if (!HttpParser.isToken(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -376,6 +379,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 				end = pos;
 			} else if ((buf[pos] == Constants.QUESTION) && (questionPos == -1)) {
 				questionPos = pos;
+            } else if (HttpParser.isNotRequestTarget(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -426,6 +431,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 				if (end == 0)
 					end = pos;
 				eol = true;
+            } else if (!HttpParser.isHttpProtocol(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -501,6 +508,11 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 			if (buf[pos] == Constants.COLON) {
 				colon = true;
 				headerValue = headers.addValue(buf, start, pos - start);
+            } else if (!HttpParser.isToken(buf[pos])) {
+                // If a non-token header is detected, skip the line and
+                // ignore the header
+                skipLine(start);
+                return true;
 			}
 			chr = buf[pos];
 			if ((chr >= Constants.A) && (chr <= Constants.Z)) {
@@ -595,6 +607,33 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 
 		return true;
 	}
+
+    protected void skipLine(int start) throws IOException {
+        boolean eol = false;
+        int lastRealByte = start;
+        if (pos - 1 > start) {
+            lastRealByte = pos - 1;
+        }
+
+        while (!eol) {
+
+            // Read new bytes if needed
+            if (pos >= lastValid) {
+                if (!fill())
+                    throw new EOFException(MESSAGES.eofError());
+            }
+
+            if (buf[pos] == Constants.CR) {
+                // Skip
+            } else if (buf[pos] == Constants.LF) {
+                eol = true;
+            } else {
+                lastRealByte = pos;
+            }
+            pos++;
+        }
+
+    }
 
 	/**
 	 * Fill the internal buffer using data from the undelying input stream.
