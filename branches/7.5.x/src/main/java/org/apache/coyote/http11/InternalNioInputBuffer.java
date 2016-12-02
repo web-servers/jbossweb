@@ -32,6 +32,7 @@ import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.coyote.http11.upgrade.servlet31.ReadListener;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SocketStatus;
@@ -323,6 +324,8 @@ public class InternalNioInputBuffer extends AbstractInternalInputBuffer {
 			if (buf[pos] == Constants.SP || buf[pos] == Constants.HT) {
 				space = true;
 				request.method().setBytes(buf, start, pos - start);
+            } else if (!HttpParser.isToken(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -369,6 +372,8 @@ public class InternalNioInputBuffer extends AbstractInternalInputBuffer {
 				end = pos;
 			} else if ((buf[pos] == Constants.QUESTION) && (questionPos == -1)) {
 				questionPos = pos;
+            } else if (HttpParser.isNotRequestTarget(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -418,6 +423,8 @@ public class InternalNioInputBuffer extends AbstractInternalInputBuffer {
 				if (end == 0)
 					end = pos;
 				eol = true;
+            } else if (!HttpParser.isHttpProtocol(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
