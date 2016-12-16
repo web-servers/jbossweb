@@ -27,6 +27,7 @@ import org.apache.coyote.http11.Constants;
 import org.apache.coyote.http11.InputFilter;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
+import org.jboss.web.CoyoteLogger;
 
 /**
  * Chunked input filter. Parses chunked data according to
@@ -205,6 +206,9 @@ public class ChunkedInputFilter implements InputFilter {
         while ((read = doRead(readChunk, null)) >= 0) {
             swallowed += read;
             if (maxSwallowSize > -1 && swallowed > maxSwallowSize) {
+                if (CoyoteLogger.HTTP_LOGGER.isDebugEnabled()) {
+                    CoyoteLogger.HTTP_LOGGER.maxSwallowSizeExceeded(maxSwallowSize);
+                }
                 throw MESSAGES.maxSwallowSizeExceeded();
             }
         }
