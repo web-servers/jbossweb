@@ -520,4 +520,8 @@ public interface CoyoteLogger extends BasicLogger {
     @Message(id = 3106, value = "Unsupported protocol %s")
     void unsupportedProtocol(String unsupportedProtocol);
 
+    @LogMessage(level = DEBUG)
+    @Message(id = 3107, value = "Maximum swallow size (%s) is exceeded")
+    void maxSwallowSizeExceeded(int size);
+
 }

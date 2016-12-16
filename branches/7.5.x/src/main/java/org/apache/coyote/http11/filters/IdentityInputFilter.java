@@ -22,7 +22,7 @@ import static org.jboss.web.CoyoteMessages.MESSAGES;
 import java.io.IOException;
 
 import org.apache.tomcat.util.buf.ByteChunk;
-
+import org.jboss.web.CoyoteLogger;
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.coyote.http11.InputFilter;
@@ -171,6 +171,9 @@ public class IdentityInputFilter implements InputFilter {
                     // Note: We do not fail early so the client has a chance to
                     // read the response before the connection is closed. See:
                     // http://httpd.apache.org/docs/2.0/misc/fin_wait_2.html#appendix
+                    if (CoyoteLogger.HTTP_LOGGER.isDebugEnabled()) {
+                        CoyoteLogger.HTTP_LOGGER.maxSwallowSizeExceeded(maxSwallowSize);
+                    }
                     throw MESSAGES.maxSwallowSizeExceeded();
                 }
             } else { // errors are handled higher up.
