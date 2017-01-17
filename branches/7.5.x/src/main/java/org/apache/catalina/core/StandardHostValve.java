@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.connector.AsyncContextImpl;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
@@ -211,7 +212,7 @@ final class StandardHostValve
 
         // Some regular callback events should be filtered out for Servlet 3 async
         if (request.getAsyncContext() != null) {
-            Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
+            AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
             if (event.getType() == EventType.EVENT && asyncContext.getRunnable() == null 
                     && asyncContext.getPath() == null) {
                 return;
@@ -268,7 +269,7 @@ final class StandardHostValve
                 status(request, response);
             }
         } else {
-            Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
+            AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
             if ((event.getType() == EventType.TIMEOUT || event.getType() == EventType.ERROR)
                     && request.isEventMode() && asyncContext.getPath() == null) {
                 Throwable t = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);

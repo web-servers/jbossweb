@@ -42,10 +42,10 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.InstanceEvent;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.connector.AsyncContextImpl;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.connector.Request.AsyncListenerRegistration;
 import org.apache.catalina.util.InstanceSupport;
 import org.apache.catalina.valves.ValveBase;
 import org.jboss.servlet.http.HttpEvent;
@@ -505,17 +505,17 @@ final class StandardWrapperValve
     public void async(Request request, Response response, HttpEvent event)
         throws IOException, ServletException {
         
-        Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
+        AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
         if (asyncContext != null) {
             if (event.getType() == EventType.END || event.getType() == EventType.ERROR
                     || event.getType() == EventType.TIMEOUT) {
                 // Invoke the listeners with onComplete or onTimeout
                 boolean timeout = (event.getType() == EventType.TIMEOUT);
                 boolean error = (event.getType() == EventType.ERROR);
-                Iterator<AsyncListenerRegistration> asyncListenerRegistrations = 
+                Iterator<AsyncContextImpl.AsyncListenerRegistration> asyncListenerRegistrations = 
                     asyncContext.getAsyncListeners().values().iterator();
                 while (asyncListenerRegistrations.hasNext()) {
-                    AsyncListenerRegistration asyncListenerRegistration = asyncListenerRegistrations.next();
+                    AsyncContextImpl.AsyncListenerRegistration asyncListenerRegistration = asyncListenerRegistrations.next();
                     AsyncListener asyncListener = asyncListenerRegistration.getListener();
                     try {
                         if (timeout) {
