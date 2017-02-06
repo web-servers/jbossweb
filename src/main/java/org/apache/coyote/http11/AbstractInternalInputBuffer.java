@@ -1,24 +1,21 @@
-/**
- * JBoss, Home of Professional Open Source. Copyright 2012, Red Hat, Inc., and
- * individual contributors as indicated by the @author tags. See the
- * copyright.txt file in the distribution for a full listing of individual
- * contributors.
- * 
- * This is free software; you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- * 
- * This software is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this software; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA, or see the FSF
- * site: http://www.fsf.org.
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2012 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.apache.coyote.http11;
 
 import static org.jboss.web.CoyoteMessages.MESSAGES;
@@ -32,6 +29,7 @@ import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.apache.tomcat.util.http.parser.HttpParser;
 
 /**
  * {@code AbstractInternalInputBuffer}
@@ -122,15 +120,6 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 	 * Create a new instance of {@code AbstractInternalInputBuffer}
 	 * 
 	 * @param request
-	 */
-	public AbstractInternalInputBuffer(Request request) {
-		this(request, Constants.DEFAULT_HTTP_HEADER_BUFFER_SIZE);
-	}
-
-	/**
-	 * Create a new instance of {@code AbstractInternalInputBuffer}
-	 * 
-	 * @param request
 	 * @param headerBufferSize
 	 */
 	public AbstractInternalInputBuffer(Request request, int headerBufferSize) {
@@ -142,12 +131,7 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 		lastActiveFilter = -1;
 		parsingHeader = true;
 		swallowInput = true;
-
-		if (headerBufferSize < (8 * 1024)) {
-			bbuf = ByteBuffer.allocateDirect(6 * 1500);
-		} else {
-			bbuf = ByteBuffer.allocateDirect((headerBufferSize / 1500 + 1) * 1500);
-		}
+		bbuf = ByteBuffer.allocateDirect(headerBufferSize);
 	}
 
 	/**
@@ -222,6 +206,7 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
             activeFilters[i].recycle();
         }
         lastActiveFilter = -1;
+        readTimeout = Integer.MAX_VALUE;
     }
 
 	/**
@@ -259,7 +244,7 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 		request.recycle();
 
 		// Copy leftover bytes to the beginning of the buffer
-		if (lastValid - pos > 0) {
+		if (lastValid - pos > 0 && pos > 0) {
 			int npos = 0;
 			int opos = pos;
 			while (lastValid - opos > opos - npos) {
@@ -343,6 +328,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 			if (buf[pos] == Constants.SP || buf[pos] == Constants.HT) {
 				space = true;
 				request.method().setBytes(buf, start, pos - start);
+            } else if (!HttpParser.isToken(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -392,6 +379,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 				end = pos;
 			} else if ((buf[pos] == Constants.QUESTION) && (questionPos == -1)) {
 				questionPos = pos;
+            } else if (HttpParser.isNotRequestTarget(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -442,6 +431,8 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 				if (end == 0)
 					end = pos;
 				eol = true;
+            } else if (!HttpParser.isHttpProtocol(buf[pos])) {
+                throw MESSAGES.invalidRequestLine();
 			}
 
 			pos++;
@@ -517,6 +508,11 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 			if (buf[pos] == Constants.COLON) {
 				colon = true;
 				headerValue = headers.addValue(buf, start, pos - start);
+            } else if (!HttpParser.isToken(buf[pos])) {
+                // If a non-token header is detected, skip the line and
+                // ignore the header
+                skipLine(start);
+                return true;
 			}
 			chr = buf[pos];
 			if ((chr >= Constants.A) && (chr <= Constants.Z)) {
@@ -611,6 +607,33 @@ public abstract class AbstractInternalInputBuffer implements InputBuffer {
 
 		return true;
 	}
+
+    protected void skipLine(int start) throws IOException {
+        boolean eol = false;
+        int lastRealByte = start;
+        if (pos - 1 > start) {
+            lastRealByte = pos - 1;
+        }
+
+        while (!eol) {
+
+            // Read new bytes if needed
+            if (pos >= lastValid) {
+                if (!fill())
+                    throw new EOFException(MESSAGES.eofError());
+            }
+
+            if (buf[pos] == Constants.CR) {
+                // Skip
+            } else if (buf[pos] == Constants.LF) {
+                eol = true;
+            } else {
+                lastRealByte = pos;
+            }
+            pos++;
+        }
+
+    }
 
 	/**
 	 * Fill the internal buffer using data from the undelying input stream.
