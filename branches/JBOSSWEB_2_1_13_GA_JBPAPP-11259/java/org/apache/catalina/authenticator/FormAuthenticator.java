@@ -402,6 +402,7 @@ public class FormAuthenticator
 
         MimeHeaders rmh = request.getCoyoteRequest().getMimeHeaders();
         rmh.recycle();
+        request.getCoyoteRequest().setContentType((MessageBytes) null);        
         boolean cachable = "GET".equalsIgnoreCase(saved.getMethod()) ||
                            "HEAD".equalsIgnoreCase(saved.getMethod());
         Iterator names = saved.getHeaderNames();
