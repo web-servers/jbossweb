@@ -1260,7 +1260,7 @@ public class Http11AprProcessor implements ActionHook {
         } else if (actionCode == ActionCode.ACTION_EVENT_SUSPEND) {
             readNotifications = false;
         } else if (actionCode == ActionCode.ACTION_EVENT_RESUME) {
-            synchronized (this) {
+            synchronized (request) {
                 readNotifications = true;
                 // An event is being processed already: adding for resume will be done
                 // when the socket gets back to the poller
@@ -1270,7 +1270,7 @@ public class Http11AprProcessor implements ActionHook {
                 resumeNotification = true;
             }
         } else if (actionCode == ActionCode.ACTION_EVENT_WAKEUP) {
-            synchronized (this) {
+            synchronized (request) {
                 // An event is being processed already: adding for resume will be done
                 // when the socket gets back to the poller
                 if (!eventProcessing && !resumeNotification) {
@@ -1279,7 +1279,7 @@ public class Http11AprProcessor implements ActionHook {
                 resumeNotification = true;
             }
         } else if (actionCode == ActionCode.ACTION_EVENT_WRITE) {
-            synchronized (this) {
+            synchronized (request) {
                 // An event is being processed already: adding for write will be done
                 // when the socket gets back to the poller
                 if (!eventProcessing && !writeNotification) {

@@ -812,7 +812,7 @@ public class Http11NioProtocol extends Http11AbstractProtocol {
 			Http11NioProcessor processor = connections.get(channel.getId());
 			SocketState state = SocketState.CLOSED;
 			if (processor != null) {
-			    synchronized (processor) {
+			    synchronized (processor.getRequest()) {
 			        processor.startProcessing();
 			        // Call the appropriate event
 			        try {
@@ -899,7 +899,7 @@ public class Http11NioProtocol extends Http11AbstractProtocol {
             if (processor == null) {
                 processor = createProcessor();
             }
-            synchronized (processor) {
+            synchronized (processor.getRequest()) {
                 try {
                     processor.startProcessing();
 
