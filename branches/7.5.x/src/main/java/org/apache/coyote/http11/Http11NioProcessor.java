@@ -735,17 +735,19 @@ public class Http11NioProcessor extends Http11AbstractProcessor {
 	 * @param param
 	 *            the vent parameter
 	 */
-	private synchronized void resumeEvent(Object param, boolean read) {
-	    if (read) {
-	        readNotifications = true;
+	private void resumeEvent(Object param, boolean read) {
+	    synchronized (request) {
+	        if (read) {
+	            readNotifications = true;
+	        }
+	        // An event is being processed already: adding for resume will be
+	        // done
+	        // when the channel gets back to the poller
+	        if (!processing && !resumeNotification) {
+	            endpoint.addEventChannel(channel, keepAliveTimeout, false, false, true, true);
+	        }
+	        resumeNotification = true;
 	    }
-		// An event is being processed already: adding for resume will be
-		// done
-		// when the channel gets back to the poller
-        if (!processing && !resumeNotification) {
-			endpoint.addEventChannel(channel, keepAliveTimeout, false, false, true, true);
-		}
-		resumeNotification = true;
 	}
 
 	/**
@@ -753,14 +755,16 @@ public class Http11NioProcessor extends Http11AbstractProcessor {
 	 * 
 	 * @param param
 	 */
-	private synchronized void writeEvent(Object param) {
-		// An event is being processed already: adding for write will be
-		// done
-		// when the channel gets back to the poller
-		if (!processing && !writeNotification) {
-			endpoint.addEventChannel(channel, timeout, false, true, false, true);
-		}
-		writeNotification = true;
+	private void writeEvent(Object param) {
+        synchronized (request) {
+            // An event is being processed already: adding for write will be
+            // done
+            // when the channel gets back to the poller
+            if (!processing && !writeNotification) {
+                endpoint.addEventChannel(channel, timeout, false, true, false, true);
+            }
+            writeNotification = true;
+        }
 	}
 
 	/**

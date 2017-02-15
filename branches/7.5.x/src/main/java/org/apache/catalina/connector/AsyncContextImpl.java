@@ -53,14 +53,15 @@ public class AsyncContextImpl implements AsyncContext {
         if (request == null) {
             return;
         }
-        request.setEventMode(false);
-        request.wakeup();
+        synchronized (request.getCoyoteRequest()) {
+            if (request != null) {
+                request.setEventMode(false);
+                request.wakeup();
+            }
+        }
     }
 
     public void dispatch() {
-        if (request == null) {
-            return;
-        }
         this.servletContext = null;
         if (servletRequest == request.getRequestFacade()) {
             // Get the path directly
@@ -75,26 +76,29 @@ public class AsyncContextImpl implements AsyncContext {
                 throw MESSAGES.cannotFindDispatchContext(requestURI);
             }
         }
+        if (request == null) {
+            return;
+        }
         request.wakeup();
     }
 
     public void dispatch(String path) {
-        if (request == null) {
-            return;
-        }
         this.servletContext = null;
         this.path = path;
         useAttributes = true;
+        if (request == null) {
+            return;
+        }
         request.wakeup();
     }
 
     public void dispatch(ServletContext servletContext, String path) {
-        if (request == null) {
-            return;
-        }
         this.servletContext = servletContext;
         this.path = path;
         useAttributes = true;
+        if (request == null) {
+            return;
+        }
         request.wakeup();
     }
 
@@ -119,10 +123,10 @@ public class AsyncContextImpl implements AsyncContext {
     }
 
     public void start(Runnable runnable) {
+        this.runnable = runnable;
         if (request == null) {
             return;
         }
-        this.runnable = runnable;
         request.wakeup();
     }
 

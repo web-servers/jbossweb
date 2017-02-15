@@ -405,7 +405,7 @@ public class AjpAprProtocol
             AjpAprProcessor result = connections.get(socket);
             SocketState state = SocketState.CLOSED; 
             if (result != null) {
-                synchronized (result) {
+                synchronized (result.getRequest()) {
                     result.startProcessing();
                     // Call the appropriate event
                     try {
@@ -450,7 +450,7 @@ public class AjpAprProtocol
             if (processor == null) {
                 processor = createProcessor();
             }
-            synchronized (processor) {
+            synchronized (processor.getRequest()) {
                 try {
 
                     SocketState state = processor.process(socket);

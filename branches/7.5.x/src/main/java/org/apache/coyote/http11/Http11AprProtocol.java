@@ -560,7 +560,7 @@ public class Http11AprProtocol implements ProtocolHandler, MBeanRegistration {
             
             SocketState state = SocketState.CLOSED; 
             if (result != null) {
-                synchronized (result) {
+                synchronized (result.getRequest()) {
                     result.startProcessing();
                     // Call the appropriate event
                     try {
@@ -605,7 +605,7 @@ public class Http11AprProtocol implements ProtocolHandler, MBeanRegistration {
             if (processor == null) {
                 processor = createProcessor();
             }
-            synchronized (processor) {
+            synchronized (processor.getRequest()) {
                 try {
 
                     SocketState state = processor.process(socket);
