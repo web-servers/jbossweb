@@ -72,8 +72,10 @@ public class HttpEventImpl implements HttpEvent, WebConnection {
     }
     
     public void close() throws IOException {
-        request.setEventMode(false);
-        request.resume();
+        synchronized (request.getCoyoteRequest()) {
+            request.setEventMode(false);
+            request.resume();
+        }
     }
 
     public EventType getType() {

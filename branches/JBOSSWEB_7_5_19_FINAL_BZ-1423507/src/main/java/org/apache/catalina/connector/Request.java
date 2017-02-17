@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -72,6 +73,7 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.Realm;
 import org.apache.catalina.Session;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.connector.AsyncContextImpl.AsyncListenerRegistration;
 import org.apache.catalina.core.ApplicationFilterChain;
 import org.apache.catalina.core.ApplicationFilterConfig;
 import org.apache.catalina.core.ApplicationFilterFactory;
@@ -269,8 +271,8 @@ public class Request
     /**
      * Async listeners.
      */
-    protected LinkedHashMap<AsyncListener, AsyncListenerRegistration> asyncListeners = 
-        new LinkedHashMap<AsyncListener, AsyncListenerRegistration>();
+    protected LinkedHashMap<AsyncListener, AsyncContextImpl.AsyncListenerRegistration> asyncListeners = 
+        new LinkedHashMap<AsyncListener, AsyncContextImpl.AsyncListenerRegistration>();
     
     
     /**
@@ -529,7 +531,10 @@ public class Request
         upgradeHandler = null;
 
         sslAttributes = false;
-        asyncContext = null;
+        if (asyncContext != null) {
+            asyncContext.clear();
+            asyncContext = null;
+        }
         asyncTimeout = -1;
         canStartAsync = true;
         asyncListeners.clear();
@@ -3167,6 +3172,22 @@ public class Request
         return asyncContext;
     }
 
+    public Map<AsyncListener, AsyncListenerRegistration> getAsyncListeners() {
+        return asyncListeners;
+    }
+
+    public List<AsyncListener> getAsyncListenerInstances() {
+        return asyncListenerInstances;
+    }
+
+    public long getAsyncTimeout() {
+        return asyncTimeout;
+    }
+
+    public void setAsyncTimeout(long timeout) {
+        asyncTimeout = timeout;
+    }
+
     public boolean isAsyncStarted() {
         return (asyncContext != null && !canStartAsync && eventMode);
     }
@@ -3214,9 +3235,9 @@ public class Request
         if (!canStartAsync) {
             throw MESSAGES.cannotStartAsync();
         }
-        LinkedHashMap<AsyncListener, AsyncListenerRegistration> localAsyncListeners = asyncListeners;
-        asyncListeners = new LinkedHashMap<AsyncListener, AsyncListenerRegistration>();
-        for (AsyncListenerRegistration registration : localAsyncListeners.values()) {
+        LinkedHashMap<AsyncListener, AsyncContextImpl.AsyncListenerRegistration> localAsyncListeners = asyncListeners;
+        asyncListeners = new LinkedHashMap<AsyncListener, AsyncContextImpl.AsyncListenerRegistration>();
+        for (AsyncContextImpl.AsyncListenerRegistration registration : localAsyncListeners.values()) {
             AsyncListener asyncListener = registration.getListener();
             AsyncEvent asyncEvent = new AsyncEvent(asyncContext, registration.getRequest(), registration.getResponse());
             try {
@@ -3227,7 +3248,7 @@ public class Request
         }
         canStartAsync = false;
         if (asyncContext == null) {
-            asyncContext = new AsyncContextImpl();
+            asyncContext = new AsyncContextImpl(this);
             eventMode = true;
         } else {
             asyncContext.reset();
@@ -3345,7 +3366,7 @@ public class Request
         response.sendUpgrade();
         eventMode = true;
         this.upgradeHandler = ugradeHandler;
-        asyncContext = new AsyncContextImpl();
+        asyncContext = new AsyncContextImpl(this);
         return ugradeHandler;
     }
 
@@ -3398,203 +3419,4 @@ public class Request
     }
     
     
-    // ------------------------------------------ AsyncContextImpl Inner Class
-
-
-    public class AsyncContextImpl implements AsyncContext {
-
-        protected ServletRequest servletRequest = null;
-        protected ServletResponse servletResponse = null;
-        
-        protected ServletContext servletContext = null;
-        protected String path = null;
-        protected Runnable runnable = null;
-        protected Throwable error = null;
-        protected boolean useAttributes = false;
-        protected boolean original = true;
-        protected boolean ready = true;
-
-        public void complete() {
-            setEventMode(false);
-            wakeup();
-        }
-
-        public void dispatch() {
-            this.servletContext = null;
-            if (servletRequest == getRequestFacade()) {
-                // Get the path directly
-                path = getRequestPathMB().toString();
-            } else if (servletRequest instanceof HttpServletRequest) {
-                // Remap the path to the target context
-                String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
-                this.servletContext = getServletContext0().getContext(requestURI);
-                if (servletContext != null) {
-                    path = requestURI.substring(servletContext.getContextPath().length());
-                } else {
-                    throw MESSAGES.cannotFindDispatchContext(requestURI);
-                }
-            }
-            wakeup();
-        }
-
-        public void dispatch(String path) {
-            this.servletContext = null;
-            this.path = path;
-            useAttributes = true;
-            wakeup();
-        }
-
-        public void dispatch(ServletContext servletContext, String path) {
-            this.servletContext = servletContext;
-            this.path = path;
-            useAttributes = true;
-            wakeup();
-        }
-
-        public ServletRequest getRequest() {
-            if (servletRequest != null) {
-                return servletRequest;
-            } else {
-                return getRequestFacade();
-            }
-        }
-
-        public ServletResponse getResponse() {
-            if (servletResponse != null) {
-                return servletResponse;
-            } else {
-                return getResponseFacade();
-            }
-        }
-
-        public boolean hasOriginalRequestAndResponse() {
-            return (servletRequest == getRequestFacade() && servletResponse == getResponseFacade());
-        }
-
-        public void start(Runnable runnable) {
-            this.runnable = runnable;
-            wakeup();
-        }
-
-        public boolean isReady() {
-            return ready;
-        }
-
-        public void done() {
-            ready = false;
-        }
-
-        public void setRequestAndResponse(ServletRequest servletRequest, ServletResponse servletResponse) {
-            this.servletRequest = servletRequest;
-            this.servletResponse = servletResponse;
-        }
-
-        public ServletContext getServletContext() {
-            return servletContext;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public boolean getUseAttributes() {
-            return useAttributes;
-        }
-
-        public Runnable getRunnable() {
-            return runnable;
-        }
-        
-        public Runnable runRunnable() {
-            Runnable result = runnable;
-            runnable = null;
-            return result;
-        }
-        
-        public void reset() {
-            servletContext = null;
-            path = null;
-            runnable = null;
-            useAttributes = false;
-            ready = true;
-            error = null;
-        }
-        
-        public Map<AsyncListener, AsyncListenerRegistration> getAsyncListeners() {
-            return asyncListeners;
-        }
-
-        public void addListener(AsyncListener listener,
-                ServletRequest servletRequest, ServletResponse servletResponse) {
-            asyncListeners.put(listener, 
-                    new AsyncListenerRegistration(listener, servletRequest, servletResponse));
-        }
-
-        public void addListener(AsyncListener listener) {
-            addListener(listener, getRequest(), response.getResponse());
-        }
-
-        public long getTimeout() {
-            return asyncTimeout;
-        }
-
-        public void setTimeout(long timeout) {
-            asyncTimeout = timeout;
-            int realTimeout = (asyncTimeout > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) asyncTimeout;
-            if (realTimeout <= 0) {
-                realTimeout = Integer.MAX_VALUE;
-            }
-            setTimeout0(realTimeout);
-        }
-
-        public <T extends AsyncListener> T createListener(Class<T> clazz)
-                throws ServletException {
-            T listenerInstance = null;
-            try {
-                listenerInstance = (T) context.getInstanceManager().newInstance(clazz);
-            } catch (Exception e) {
-                throw new ServletException(MESSAGES.listenerCreationFailed(clazz.getName()), e);
-            }
-            asyncListenerInstances.add(listenerInstance);
-            return listenerInstance;
-        }
-
-        public Throwable getError() {
-            return error;
-        }
-
-        public void setError(Throwable error) {
-            ready = true;
-            this.error = error;
-        }
-
-    }
-
-    
-    // ------------------------------------------ RequestResponse Inner Class
-
-
-    public class AsyncListenerRegistration {
-        protected ServletRequest request;
-        protected ServletResponse response;
-        protected AsyncListener listener;
-        protected AsyncListenerRegistration(AsyncListener listener, 
-                ServletRequest request, ServletResponse response)
-        {
-            this.listener = listener;
-            this.request = request;
-            this.response = response;
-        }
-        public ServletRequest getRequest() {
-            return request;
-        }
-        public ServletResponse getResponse() {
-            return response;
-        }
-        public AsyncListener getListener() {
-            return listener;
-        }
-    }
-
-
 }

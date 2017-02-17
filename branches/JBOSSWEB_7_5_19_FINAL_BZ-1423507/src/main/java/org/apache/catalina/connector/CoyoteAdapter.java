@@ -30,7 +30,6 @@ import org.apache.catalina.Host;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
 import org.apache.catalina.Wrapper;
-import org.apache.catalina.connector.Request.AsyncListenerRegistration;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Adapter;
@@ -227,7 +226,7 @@ public class CoyoteAdapter
                 // Calling the container
                 connector.getContainer().getPipeline().getFirst().event(request, response, request.getEvent());
 
-                Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
+                AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
                 if (!error && ((request.getAttribute(RequestDispatcher.ERROR_EXCEPTION) != null)
                         || (asyncContext != null && asyncContext.getError() != null))) {
                     // An unexpected exception occurred while processing the event, so
@@ -356,8 +355,8 @@ public class CoyoteAdapter
                 } else if (request.getAsyncContext() != null) {
                     // The AC was closed right away, so call onComplete as no event callback
                     // will occur in that case
-                    Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
-                    for (AsyncListenerRegistration asyncListenerRegistration : asyncContext.getAsyncListeners().values()) {
+                    AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
+                    for (AsyncContextImpl.AsyncListenerRegistration asyncListenerRegistration : asyncContext.getAsyncListeners().values()) {
                         AsyncListener asyncListener = asyncListenerRegistration.getListener();
                         AsyncEvent asyncEvent = new AsyncEvent(asyncContext, 
                                 asyncListenerRegistration.getRequest(), asyncListenerRegistration.getResponse());
