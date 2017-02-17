@@ -601,7 +601,7 @@ public class Http11Protocol
             Http11Processor result = connections.get(socket);
             SocketState state = SocketState.CLOSED; 
             if (result != null) {
-                synchronized (result) {
+                synchronized (result.getRequest()) {
                     result.startProcessing();
                     // Call the appropriate event
                     try {
@@ -643,7 +643,7 @@ public class Http11Protocol
             if (processor == null) {
                 processor = createProcessor();
             }
-            synchronized (processor) {
+            synchronized (processor.getRequest()) {
                 try {
 
                     if (proto.secure && (proto.sslImplementation != null)) {
