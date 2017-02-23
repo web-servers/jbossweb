@@ -288,15 +288,6 @@ public class InternalNioOutputBuffer implements OutputBuffer {
 	}
 
 	/**
-	 * Close the channel
-	 * 
-	 * @param channel
-	 */
-	private void close(NioChannel channel) {
-		endpoint.closeChannel(channel);
-	}
-
-	/**
 	 * Perform a blocking write operation
 	 * 
 	 * @param buffer
@@ -312,13 +303,11 @@ public class InternalNioOutputBuffer implements OutputBuffer {
 		int nw = 0;
 		try {
 			nw = this.channel.writeBytes(this.bbuf, timeout, unit);
-			if (nw < 0) {
-				close(channel);
-			}
 		} catch (Throwable t) {
 			if (CoyoteLogger.HTTP_LOGGER.isDebugEnabled()) {
 	             CoyoteLogger.HTTP_LOGGER.errorWithBlockingWrite(t);
 			}
+			nw = -1;
 		}
 
 		return nw;
