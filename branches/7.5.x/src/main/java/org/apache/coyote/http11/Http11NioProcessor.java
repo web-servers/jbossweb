@@ -756,15 +756,13 @@ public class Http11NioProcessor extends Http11AbstractProcessor {
 	 * @param param
 	 */
 	private void writeEvent(Object param) {
-        synchronized (request) {
-            // An event is being processed already: adding for write will be
-            // done
-            // when the channel gets back to the poller
-            if (!processing && !writeNotification) {
-                endpoint.addEventChannel(channel, timeout, false, true, false, true);
-            }
-            writeNotification = true;
-        }
+	    // An event is being processed already: adding for write will be
+	    // done
+	    // when the channel gets back to the poller
+	    if (!processing && !writeNotification) {
+	        endpoint.addEventChannel(channel, timeout, false, true, false, true);
+	    }
+	    writeNotification = true;
 	}
 
 	/**
