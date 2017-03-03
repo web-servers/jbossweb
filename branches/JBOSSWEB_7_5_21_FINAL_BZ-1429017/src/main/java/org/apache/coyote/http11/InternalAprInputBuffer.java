@@ -331,14 +331,7 @@ public class InternalAprInputBuffer implements InputBuffer {
 
         // Copy leftover bytes to the beginning of the buffer
         if (lastValid - pos > 0 && pos > 0) {
-            int npos = 0;
-            int opos = pos;
-            while (lastValid - opos > opos - npos) {
-                System.arraycopy(buf, opos, buf, npos, opos - npos);
-                npos += pos;
-                opos += pos;
-            }
-            System.arraycopy(buf, opos, buf, npos, lastValid - opos);
+            System.arraycopy(buf, pos, buf, 0, lastValid - pos);
         }
         
         // Recycle filters
