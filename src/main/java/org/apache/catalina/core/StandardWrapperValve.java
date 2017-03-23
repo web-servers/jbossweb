@@ -1,54 +1,27 @@
 /*
- * JBoss, Home of Professional Open Source
- * Copyright 2009, JBoss Inc., and individual contributors as indicated
- * by the @authors tag. See the copyright.txt in the distribution for a
- * full listing of individual contributors.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2012 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
- * 
- * 
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- * Copyright 1999-2009 The Apache Software Foundation
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 
 package org.apache.catalina.core;
 
 
 import static org.jboss.web.CatalinaMessages.MESSAGES;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -69,10 +42,10 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.InstanceEvent;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.connector.AsyncContextImpl;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.connector.Request.AsyncListenerRegistration;
 import org.apache.catalina.util.InstanceSupport;
 import org.apache.catalina.valves.ValveBase;
 import org.jboss.servlet.http.HttpEvent;
@@ -532,17 +505,17 @@ final class StandardWrapperValve
     public void async(Request request, Response response, HttpEvent event)
         throws IOException, ServletException {
         
-        Request.AsyncContextImpl asyncContext = (Request.AsyncContextImpl) request.getAsyncContext();
+        AsyncContextImpl asyncContext = (AsyncContextImpl) request.getAsyncContext();
         if (asyncContext != null) {
             if (event.getType() == EventType.END || event.getType() == EventType.ERROR
                     || event.getType() == EventType.TIMEOUT) {
                 // Invoke the listeners with onComplete or onTimeout
-                boolean timeout = (event.getType() == EventType.TIMEOUT) ? true : false;
-                boolean error = (event.getType() == EventType.ERROR) ? true : false;
-                Iterator<AsyncListenerRegistration> asyncListenerRegistrations = 
+                boolean timeout = (event.getType() == EventType.TIMEOUT);
+                boolean error = (event.getType() == EventType.ERROR);
+                Iterator<AsyncContextImpl.AsyncListenerRegistration> asyncListenerRegistrations = 
                     asyncContext.getAsyncListeners().values().iterator();
                 while (asyncListenerRegistrations.hasNext()) {
-                    AsyncListenerRegistration asyncListenerRegistration = asyncListenerRegistrations.next();
+                    AsyncContextImpl.AsyncListenerRegistration asyncListenerRegistration = asyncListenerRegistrations.next();
                     AsyncListener asyncListener = asyncListenerRegistration.getListener();
                     try {
                         if (timeout) {
@@ -563,16 +536,82 @@ final class StandardWrapperValve
                         exception(request, response, e);
                     }
                 }
+                boolean end = (event.getType() == EventType.END) || error;
                 if (timeout && request.isEventMode() && asyncContext.getPath() == null) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    end = true;
+                }
+                try {
+                    // Call error notifications for IO listeners
+                    if (error) {
+                        Throwable throwable = asyncContext.getError();
+                        if (throwable == null) {
+                            throwable = response.getCoyoteResponse().getErrorException();
+                            if (throwable != null){
+                                if (!(throwable instanceof IOException)) {
+                                    throwable = new IOException(throwable);
+                                }
+                            } else {
+                                throwable = new EOFException();
+                            }
+                        }
+                        if (request.getReadListener() != null) { 
+                            request.getReadListener().onError(throwable);
+                        }
+                        if (response.getWriteListener() != null) {
+                            response.getWriteListener().onError(throwable);
+                        }
+                    }
+                } catch (Throwable e) {
+                    container.getLogger().error(MESSAGES.ioListenerError(getContainer().getName()), e);
+                    exception(request, response, e);
+                }
+                if (end && (request.getUpgradeHandler() != null)) {
+                    try {
+                        // FIXME: Examine if need to call elsewhere
+                        request.getUpgradeHandler().destroy();
+                    } catch (Throwable e) {
+                        container.getLogger().error(MESSAGES.upgradeHandlerDestroyError(getContainer().getName()), e);
+                        exception(request, response, e);
+                    }
                 }
                 if (error && request.isEventMode() && asyncContext.getPath() == null) {
                     exception(request, response, asyncContext.getError());
                 }
+            } else if (event.getType() == EventType.READ) {
+                // Read notification
+                if (request.getReadListener() != null) {
+                    try {
+                        request.getReadListener().onDataAvailable();
+                    } catch (Throwable e) {
+                        container.getLogger().error(MESSAGES.ioListenerError(getContainer().getName()), e);
+                        exception(request, response, e);
+                    }
+                }
+            } else if (event.getType() == EventType.EOF) {
+                // End of stream notification
+                if (request.getReadListener() != null) {
+                    try {
+                        request.getReadListener().onAllDataRead();
+                    } catch (Throwable e) {
+                        container.getLogger().error(MESSAGES.ioListenerError(getContainer().getName()), e);
+                        exception(request, response, e);
+                    }
+                }
+            } else if (event.getType() == EventType.WRITE) {
+                // Write notification
+                if (response.getWriteListener() != null) {
+                    try {
+                        response.getWriteListener().onWritePossible();
+                    } catch (Throwable e) {
+                        container.getLogger().error(MESSAGES.ioListenerError(getContainer().getName()), e);
+                        exception(request, response, e);
+                    }
+                }
             } else if (asyncContext.getRunnable() != null) {
                 // Execute the runnable
                 try {
-                    asyncContext.getRunnable().run();
+                    asyncContext.runRunnable().run();
                 } catch (Throwable e) {
                     container.getLogger().error(MESSAGES.asyncRunnableError(getContainer().getName()), e);
                     asyncContext.setError(e);
