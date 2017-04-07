@@ -2996,8 +2996,15 @@ public class Request
         try {
             for (FileItem fileItem : upload.parseRequest(getRequest())) {
                 if (fileItem.getName() == null) {
+                    String encoding = coyoteRequest.getParameters().getEncoding();
+                    if (encoding == null) {
+                        encoding = getCharacterEncoding();
+                        if (encoding == null) {
+                            encoding = Parameters.DEFAULT_ENCODING;
+                        }
+                    }
                     coyoteRequest.getParameters().addParameterValues
-                        (fileItem.getFieldName(), new String[] {fileItem.getString()});
+                        (fileItem.getFieldName(), new String[] {fileItem.getString(encoding)});
                 }
                 parts.add(new StandardPart(fileItem, config));
             }
