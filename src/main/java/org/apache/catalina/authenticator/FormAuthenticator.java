@@ -491,6 +491,7 @@ public class FormAuthenticator
         String method = saved.getMethod();
         MimeHeaders rmh = request.getCoyoteRequest().getMimeHeaders();
         rmh.recycle();
+        request.getCoyoteRequest().setContentType((MessageBytes) null);
         boolean cachable = "GET".equalsIgnoreCase(method) ||
                            "HEAD".equalsIgnoreCase(method);
         Iterator names = saved.getHeaderNames();
@@ -523,15 +524,15 @@ public class FormAuthenticator
         if (body != null) {
             request.resetBody();
             request.getCoyoteRequest().action(ActionCode.ACTION_REQ_SET_BODY_REPLAY, body);
-            // Set content type
-            MessageBytes contentType = MessageBytes.newInstance();
-            //If no content type specified, use default for POST
-            String savedContentType = saved.getContentType();
-            if (savedContentType == null && "POST".equalsIgnoreCase(method)) {
-                savedContentType = "application/x-www-form-urlencoded";
-            }
-            contentType.setString(savedContentType);
-            request.getCoyoteRequest().setContentType(contentType);
+        // Set content type
+        MessageBytes contentType = MessageBytes.newInstance();
+        //If no content type specified, use default for POST
+        String savedContentType = saved.getContentType();
+        if (savedContentType == null && "POST".equalsIgnoreCase(method)) {
+            savedContentType = "application/x-www-form-urlencoded";
+        }
+        contentType.setString(savedContentType);
+        request.getCoyoteRequest().setContentType(contentType);
         }
         request.getCoyoteRequest().method().setString(method);
 
@@ -589,8 +590,8 @@ public class FormAuthenticator
         while ( (bytesRead = is.read(buffer) ) >= 0) {
             body.append(buffer, 0, bytesRead);
         }
+        saved.setContentType(request.getContentType());
         if (body.getLength() > 0) {
-            saved.setContentType(request.getContentType());
             saved.setBody(body);
         }
         if (body.getLength() == 0) {
