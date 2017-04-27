@@ -192,4 +192,8 @@ public interface JasperLogger extends BasicLogger {
     @Message(id = 5034, value = "Error loading core class")
     void errorLoadingCoreClass(@Cause Throwable t);
 
+    @LogMessage(level = INFO)
+    @Message(id = 5035, value = "Configuration setting %s (value: %s) is ignored when a security manager is enabled.")
+    void settingIgnored(String name, String value);
+
 }
