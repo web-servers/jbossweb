@@ -47,6 +47,7 @@ import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -345,6 +346,17 @@ public class DefaultServlet
 
     }
 
+
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        if (req.getDispatcherType() == DispatcherType.ERROR) {
+            doGet(req, resp);
+        } else {
+            super.service(req, resp);
+        }
+
+    }
 
     /**
      * Process a GET request for the specified resource.
