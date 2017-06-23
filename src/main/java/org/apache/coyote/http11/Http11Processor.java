@@ -834,14 +834,16 @@ public class Http11Processor implements ActionHook {
             }
 
             // Setting up filters, and parse some request headers
-            rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
-            try {
-                prepareRequest();
-            } catch (Throwable t) {
-                CoyoteLogger.HTTP_LOGGER.errorPreparingRequest(t);
-                // 400 - Internal Server Error
-                response.setStatus(400);
-                error = true;
+            if (!error) {
+                rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
+                try {
+                    prepareRequest();
+                } catch (Throwable t) {
+                    CoyoteLogger.HTTP_LOGGER.errorPreparingRequest(t);
+                    // 400 - Internal Server Error
+                    response.setStatus(400);
+                    error = true;
+                }
             }
 
             if (maxKeepAliveRequests > 0 && --keepAliveLeft == 0)
