@@ -333,16 +333,19 @@ public class Http11NioProcessor extends Http11AbstractProcessor {
 				response.setStatus(400);
 				error = true;
 			}
-			// Setting up filters, and parse some request headers
-			rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
-			try {
-				prepareRequest();
-			} catch (Throwable t) {
-			    CoyoteLogger.HTTP_LOGGER.errorPreparingRequest(t);
-				// 500 - Internal Server Error
-				response.setStatus(500);
-				error = true;
-			}
+			
+            if (!error) {
+                // Setting up filters, and parse some request headers
+                rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
+                try {
+                    prepareRequest();
+                } catch (Throwable t) {
+                    CoyoteLogger.HTTP_LOGGER.errorPreparingRequest(t);
+                    // 500 - Internal Server Error
+                    response.setStatus(500);
+                    error = true;
+                }
+            }
 
 			if (maxKeepAliveRequests > 0 && --keepAliveLeft == 0) {
 				keepAlive = false;
