@@ -86,10 +86,7 @@ public class HttpParser {
         String prop = System.getProperty("tomcat.util.http.parser.HttpParser.requestTargetAllow", "{|}");
         if (prop != null) {
             for (int i = 0; i < prop.length(); i++) {
-                char c = prop.charAt(i);
-                if (c == '{' || c == '}' || c == '|') {
-                    REQUEST_TARGET_ALLOW[c] = true;
-                }
+                REQUEST_TARGET_ALLOW[prop.charAt(i)] = true;
             }
         }
 
