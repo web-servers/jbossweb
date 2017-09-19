@@ -83,7 +83,7 @@ public class HttpParser {
         // RFC2617 says nc is 8LHEX. <">8LHEX<"> will also be accepted
         fieldTypes.put("nc", FIELD_TYPE_LHEX);
 
-        String prop = System.getProperty("tomcat.util.http.parser.HttpParser.requestTargetAllow", "{|}");
+        String prop = System.getProperty("tomcat.util.http.parser.HttpParser.requestTargetAllow");
         if (prop != null) {
             for (int i = 0; i < prop.length(); i++) {
                 REQUEST_TARGET_ALLOW[prop.charAt(i)] = true;
