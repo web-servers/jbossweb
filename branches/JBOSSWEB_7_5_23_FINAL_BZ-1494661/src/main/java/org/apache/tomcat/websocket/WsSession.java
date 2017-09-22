@@ -420,6 +420,7 @@ public class WsSession implements Session {
             return;
         }
 
+        boolean close = false;
         synchronized (stateLock) {
             if (state != State.OPEN) {
                 return;
@@ -435,14 +436,17 @@ public class WsSession implements Session {
             state = State.CLOSING;
 
             if (!Constants.RELAXED_CLOSE_EVENT) {
-                sendCloseMessage(closeReasonMessage);
+                close = sendCloseMessage(closeReasonMessage);
                 fireEndpointOnClose(closeReasonLocal);
             } else {
                 fireEndpointOnClose(closeReasonLocal);
-                sendCloseMessage(closeReasonMessage);
+                close = sendCloseMessage(closeReasonMessage);
             }
 
             state = State.CLOSED;
+        }
+        if (close) {
+            wsRemoteEndpoint.close();
         }
 
         IOException ioe = new IOException(MESSAGES.messageFailed());
@@ -477,10 +481,9 @@ public class WsSession implements Session {
                 }
                 state = State.CLOSED;
             }
-
-            // Close the socket
-            wsRemoteEndpoint.close();
         }
+        // Close the socket
+        wsRemoteEndpoint.close();
     }
 
 
@@ -515,7 +518,8 @@ public class WsSession implements Session {
     }
 
 
-    private void sendCloseMessage(CloseReason closeReason) {
+    private boolean sendCloseMessage(CloseReason closeReason) {
+        boolean close = false;
         // 125 is maximum size for the payload of a control message
         ByteBuffer msg = ByteBuffer.allocate(125);
         CloseCode closeCode = closeReason.getCloseCode();
@@ -539,7 +543,7 @@ public class WsSession implements Session {
             // Failed to send close message. Close the socket and let the caller
             // deal with the Exception
             WebsocketsLogger.ROOT_LOGGER.closeMessageFail(ioe);
-            wsRemoteEndpoint.close();
+            close = true;
             // Failure to send a close message is not unexpected in the case of
             // an abnormal closure (usually triggered by a failure to read/write
             // from/to the client. In this case do not trigger the endpoint's
@@ -550,6 +554,7 @@ public class WsSession implements Session {
         } finally {
             webSocketContainer.unregisterSession(localEndpoint, this);
         }
+        return close;
     }
 
 
