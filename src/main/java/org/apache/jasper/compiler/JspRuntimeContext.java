@@ -17,6 +17,8 @@
 
 package org.apache.jasper.compiler;
 
+import static org.jboss.web.JasperMessages.MESSAGES;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilePermission;
@@ -77,8 +79,6 @@ public final class JspRuntimeContext {
                                                                "runtime.JspFactoryImpl$PrivilegedReleasePageContext");
                 factory.getClass().getClassLoader().loadClass( basePackage +
                                                                "runtime.JspRuntimeLibrary");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.JspRuntimeLibrary$PrivilegedIntrospectHelper");
                 factory.getClass().getClassLoader().loadClass( basePackage +
                                                                "runtime.ServletResponseWrapperInclude");
                 factory.getClass().getClassLoader().loadClass( basePackage +
@@ -284,8 +284,7 @@ public final class JspRuntimeContext {
                 } catch (FileNotFoundException ex) {
                     ctxt.incrementRemoved();
                 } catch (Throwable t) {
-                    jsw.getServletContext().log("Background compile failed",
-						t);
+                    jsw.getServletContext().log(MESSAGES.backgroundCompilationFailed(), t);
                 }
             }
         }
@@ -362,7 +361,12 @@ public final class JspRuntimeContext {
                 }
                 File contextDir = new File(codeBase);
                 URL url = contextDir.getCanonicalFile().toURL();
-                codeSource = new CodeSource(url,(Certificate[])null);
+                URL providedCodeSource = (URL) context.getAttribute(Constants.CODE_SOURCE_ATTRIBUTE_NAME);
+                if (providedCodeSource != null) {
+                    codeSource = new CodeSource(providedCodeSource, (Certificate[]) null);
+                } else {
+                    codeSource = new CodeSource(url,(Certificate[])null);
+                }
                 permissionCollection = policy.getPermissions(codeSource);
 
                 // Create a file read permission for web app context directory
@@ -422,7 +426,7 @@ public final class JspRuntimeContext {
                                 new FilePermission(jndiUrl,"read") );
                 }
             } catch(Exception e) {
-                context.log("Security Init for context failed",e);
+                context.log(MESSAGES.errorInitializingSecurity(), e);
             }
         }
     }
