@@ -101,6 +101,7 @@ public class FileDirContext extends BaseDirContext {
      * Absolute normalized filename of the base.
      */
     protected String absoluteBase = null;
+    private String canonicalBase = null;
 
 
     /**
@@ -130,22 +131,30 @@ public class FileDirContext extends BaseDirContext {
      */
     public void setDocBase(String docBase) {
 
-    // Validate the format of the proposed document root
-    if (docBase == null)
-        throw MESSAGES.invalidNullDocumentBase();
+        // Validate the format of the proposed document root
+        if (docBase == null)
+            throw MESSAGES.invalidNullDocumentBase();
 
-    // Calculate a File object referencing this document base directory
-    base = new File(docBase);
+        // Calculate a File object referencing this document base directory
+        base = new File(docBase);
         try {
             base = base.getCanonicalFile();
         } catch (IOException e) {
             // Ignore
         }
 
-    // Validate that the document base is an existing directory
-    if (!base.exists() || !base.isDirectory() || !base.canRead())
-        throw MESSAGES.invalidBaseFolder(docBase);
-        this.absoluteBase = base.getAbsolutePath();
+        // Validate that the document base is an existing directory
+        if (!base.exists() || !base.isDirectory() || !base.canRead()) {
+            throw MESSAGES.invalidBaseFolder(docBase);
+        }
+        this.absoluteBase = normalize(base.getAbsolutePath());
+        // absoluteBase also needs to be normalized. Using the canonical path is
+        // the simplest way of doing this.
+        try {
+            this.canonicalBase = base.getCanonicalPath();
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
         super.setDocBase(docBase);
 
     }
@@ -278,7 +287,7 @@ public class FileDirContext extends BaseDirContext {
             throw new NamingException
                 (MESSAGES.resourceNotFound(oldName));
 
-        File newFile = new File(base, newName);
+        File newFile = file(newName, false);
 
         file.renameTo(newFile);
 
@@ -501,7 +510,7 @@ public class FileDirContext extends BaseDirContext {
 
         // Note: No custom attributes allowed
 
-        File file = new File(base, name);
+        File file = file(name, false);
         if (file.exists())
             throw new NameAlreadyBoundException
                 (MESSAGES.resourceAlreadyBound(name));
@@ -535,7 +544,7 @@ public class FileDirContext extends BaseDirContext {
         // Note: No custom attributes allowed
         // Check obj type
 
-        File file = new File(base, name);
+        File file = file(name, false);
 
         InputStream is = null;
         if (obj instanceof Resource) {
@@ -608,7 +617,7 @@ public class FileDirContext extends BaseDirContext {
     public DirContext createSubcontext(String name, Attributes attrs)
         throws NamingException {
 
-        File file = new File(base, name);
+        File file = file(name, false);
         if (file.exists())
             throw new NameAlreadyBoundException
                 (MESSAGES.resourceAlreadyBound(name));
@@ -774,55 +783,131 @@ public class FileDirContext extends BaseDirContext {
      * @param name Normalized context-relative path (with leading '/')
      */
     protected File file(String name) {
+        return file(name, true);
+    }
+
+
+    /**
+     * Return a File object representing the specified normalized
+     * context-relative path if it exists and is readable.  Otherwise,
+     * return <code>null</code>.
+     *
+     * @param name      Normalized context-relative path (with leading '/')
+     * @param mustExist Must the specified resource exist?
+     */
+    protected File file(String name, boolean mustExist) {
+        if (name.equals("/")) {
+            name = "";
+        }
 
         File file = new File(base, name);
-        if (file.exists() && file.canRead()) {
 
-        	if (allowLinking)
-        		return file;
-        	
-            // Check that this file belongs to our root path
-            String canPath = null;
-            try {
-                canPath = file.getCanonicalPath();
-            } catch (IOException e) {
-            }
-            if (canPath == null)
-                return null;
-
-            // Check to see if going outside of the web application root
-            if (!canPath.startsWith(absoluteBase)) {
-                return null;
-            }
-
-            // Case sensitivity check
-            if (caseSensitive) {
-                String fileAbsPath = file.getAbsolutePath();
-                if (fileAbsPath.endsWith("."))
-                    fileAbsPath = fileAbsPath + "/";
-                String absPath = normalize(fileAbsPath);
-                if (canPath != null)
-                    canPath = normalize(canPath);
-                if ((absoluteBase.length() < absPath.length())
-                    && (absoluteBase.length() < canPath.length())) {
-                    absPath = absPath.substring(absoluteBase.length() + 1);
-                    if ((canPath == null) || (absPath == null))
-                        return null;
-                    if (absPath.equals(""))
-                        absPath = "/";
-                    canPath = canPath.substring(absoluteBase.length() + 1);
-                    if (canPath.equals(""))
-                        canPath = "/";
-                    if (!canPath.equals(absPath))
-                        return null;
-                }
-            }
-
-        } else {
+        // If the requested names ends in '/', the Java File API will return a
+        // matching file if one exists. This isn't what we want as it is not
+        // consistent with the Servlet spec rules for request mapping.
+        if (name.endsWith("/") && file.isFile()) {
             return null;
         }
-        return file;
 
+        // If the file/dir must exist but the identified file/dir can't be read
+        // then signal that the resource was not found
+        if (mustExist && !file.canRead()) {
+            return null;
+        }
+
+        // If allow linking is enabled, files are not limited to being located
+        // under the fileBase so all further checks are disabled.
+        if (allowLinking) {
+            return file;
+        }
+
+        // Additional Windows specific checks to handle known problems with
+        // File.getCanonicalPath()
+        if (Constants.IS_WINDOWS && isInvalidWindowsFilename(name)) {
+            return null;
+        }
+
+        // Check that this file is located under the web application root
+        String canPath = null;
+        try {
+            canPath = file.getCanonicalPath();
+        } catch (IOException e) {
+            // Ignore
+        }
+        if (canPath == null || !canPath.startsWith(canonicalBase)) {
+            return null;
+        }
+
+        if (!caseSensitive) {
+            return file;
+        }
+
+        // Ensure that the file is not outside the fileBase. This should not be
+        // possible for standard requests (the request is normalized early in
+        // the request processing) but might be possible for some access via the
+        // Servlet API (RequestDispatcher etc.) therefore these checks are
+        // retained as an additional safety measure. absoluteBase has been
+        // normalized so absPath needs to be normalized as well.
+        String absPath = normalize(file.getAbsolutePath());
+        if ((absoluteBase.length() > absPath.length())) {
+            return null;
+        }
+
+        // Remove the fileBase location from the start of the paths since that
+        // was not part of the requested path and the remaining check only
+        // applies to the request path
+        absPath = absPath.substring(absoluteBase.length());
+        canPath = canPath.substring(canonicalBase.length());
+
+        // Case sensitivity check
+        // The normalized requested path should be an exact match the equivalent
+        // canonical path. If it is not, possible reasons include:
+        // - case differences on case insensitive file systems
+        // - Windows removing a trailing ' ' or '.' from the file name
+        //
+        // In all cases, a mis-match here results in the resource not being
+        // found
+        //
+        // absPath is normalized so canPath needs to be normalized as well
+        // Can't normalize canPath earlier as canonicalBase is not normalized
+        if (canPath.length() > 0) {
+            canPath = normalize(canPath);
+        }
+        if (!canPath.equals(absPath)) {
+            return null;
+        }
+
+        return file;
+    }
+
+
+    private boolean isInvalidWindowsFilename(String name) {
+        final int len = name.length();
+        if (len == 0) {
+            return false;
+        }
+        // This consistently ~10 times faster than the equivalent regular
+        // expression irrespective of input length.
+        for (int i = 0; i < len; i++) {
+            char c = name.charAt(i);
+            if (c == '\"' || c == '<' || c == '>') {
+                // These characters are disallowed in Windows file names and
+                // there are known problems for file names with these characters
+                // when using File#getCanonicalPath().
+                // Note: There are additional characters that are disallowed in
+                //       Windows file names but these are not known to cause
+                //       problems when using File#getCanonicalPath().
+                return true;
+            }
+        }
+        // Windows does not allow file names to end in ' ' unless specific low
+        // level APIs are used to create the files that bypass various checks.
+        // File names that end in ' ' are known to cause problems when using
+        // File#getCanonicalPath().
+        if (name.charAt(len -1) == ' ') {
+            return true;
+        }
+        return false;
     }
 
 
