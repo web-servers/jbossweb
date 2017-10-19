@@ -510,8 +510,14 @@ public class FileDirContext extends BaseDirContext {
 
         // Note: No custom attributes allowed
 
+        // bind() is meant to create a file so ensure that the path doesn't end
+        // in '/'
+        if (name.endsWith("/")) {
+            throw new NameAlreadyBoundException(MESSAGES.resourceAlreadyBound(name));
+        }
+
         File file = file(name, false);
-        if (file.exists())
+        if (file == null || file.exists())
             throw new NameAlreadyBoundException
                 (MESSAGES.resourceAlreadyBound(name));
 
