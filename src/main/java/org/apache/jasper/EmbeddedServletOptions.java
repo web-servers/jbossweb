@@ -531,7 +531,7 @@ public final class EmbeddedServletOptions implements Options {
             }
         }
         
-        String genCharArray = config.getInitParameter("genStrAsCharArray");
+        String genCharArray = config.getInitParameter("genStringAsCharArray");
         if (genCharArray != null) {
             if (genCharArray.equalsIgnoreCase("true")) {
                 genStringAsCharArray = true;
@@ -566,6 +566,10 @@ public final class EmbeddedServletOptions implements Options {
          * scratchdir
          */
         String dir = config.getInitParameter("scratchdir"); 
+        if (dir != null && Constants.IS_SECURITY_ENABLED) {
+            JasperLogger.ROOT_LOGGER.settingIgnored("scratchdir", dir);
+            dir = null;
+        }
         if (dir != null) {
             scratchDir = new File(dir);
         } else {
