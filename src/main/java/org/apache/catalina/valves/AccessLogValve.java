@@ -30,6 +30,7 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -1228,14 +1229,18 @@ public class AccessLogValve
             this.header = header;
         }
 
+        @SuppressWarnings("unchecked")
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-            String value = request.getHeader(header);
-            if (value == null) {
-                buf.append('-');
-            } else {
-                buf.append(value);
+            Enumeration<String> iter = request.getHeaders(header);
+            if (iter.hasMoreElements()) {
+                buf.append(iter.nextElement());
+                while (iter.hasMoreElements()) {
+                    buf.append(',').append(iter.nextElement());
+                }
+                return;
             }
+            buf.append('-');
         }
     }
 
