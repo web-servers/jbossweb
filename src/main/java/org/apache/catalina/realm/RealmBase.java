@@ -469,7 +469,7 @@ public abstract class RealmBase
         String uri = request.getRequestPathMB().toString();
         // Bug47080 - in rare cases this may be null
         // Mapper treats as '/' do the same to prevent NPE
-        if (uri == null) {
+        if (uri == null || uri.length() == 0) {
             uri = "/";
         }
         
@@ -504,7 +504,7 @@ public abstract class RealmBase
                 }
 
                 for(int k=0; k < patterns.length; k++) {
-                    if(uri.equals(patterns[k])) {
+                    if(uri.equals(patterns[k]) || patterns[k].length() == 0 && uri.equals("/")) {
                         found = true;
                         if(collection[j].findMethod(method)) {
                             if(results == null) {
