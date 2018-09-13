@@ -25,6 +25,8 @@ import javax.websocket.Encoder;
 import javax.websocket.Extension;
 import javax.websocket.server.ServerEndpointConfig;
 
+import org.apache.tomcat.websocket.pojo.PojoEndpointServer;
+
 /**
  * Wraps the provided {@link ServerEndpointConfig} and provides a per session
  * view - the difference being that the map returned by {@link
@@ -37,9 +39,11 @@ class WsPerSessionServerEndpointConfig implements ServerEndpointConfig {
     private final Map<String,Object> perSessionUserProperties =
             new ConcurrentHashMap<String,Object>();
 
-    WsPerSessionServerEndpointConfig(ServerEndpointConfig perEndpointConfig) {
+    WsPerSessionServerEndpointConfig(ServerEndpointConfig perEndpointConfig,
+            Map<String,String> pathParams) {
         this.perEndpointConfig = perEndpointConfig;
         perSessionUserProperties.putAll(perEndpointConfig.getUserProperties());
+        perSessionUserProperties.put(PojoEndpointServer.POJO_PATH_PARAM_KEY, pathParams);
     }
 
     @Override
