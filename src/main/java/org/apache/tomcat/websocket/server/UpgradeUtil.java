@@ -190,7 +190,7 @@ public class UpgradeUtil {
         WsHandshakeRequest wsRequest = new WsHandshakeRequest(req);
         WsHandshakeResponse wsResponse = new WsHandshakeResponse();
         WsPerSessionServerEndpointConfig perSessionServerEndpointConfig =
-                new WsPerSessionServerEndpointConfig(sec);
+                new WsPerSessionServerEndpointConfig(sec, pathParams);
         sec.getConfigurator().modifyHandshake(perSessionServerEndpointConfig,
                 wsRequest, wsResponse);
         wsRequest.finished();
