@@ -51,6 +51,7 @@ import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.ClientEndpointConfig;
@@ -259,7 +260,7 @@ public class WsWebSocketContainer
         AsyncChannelWrapper channel;
         if (secure) {
             SSLEngine sslEngine = createSSLEngine(
-                    clientEndpointConfiguration.getUserProperties());
+                    clientEndpointConfiguration.getUserProperties(), host, port);
             channel = new AsyncChannelWrapperSecure(socketChannel, sslEngine);
         } else {
             channel = new AsyncChannelWrapperNonSecure(socketChannel);
@@ -666,7 +667,7 @@ public class WsWebSocketContainer
     }
 
 
-    private SSLEngine createSSLEngine(Map<String,Object> userProperties)
+    private SSLEngine createSSLEngine(Map<String,Object> userProperties, String host, int port)
             throws DeploymentException {
 
         try {
@@ -714,7 +715,7 @@ public class WsWebSocketContainer
                 }
             }
 
-            SSLEngine engine = sslContext.createSSLEngine();
+            SSLEngine engine = sslContext.createSSLEngine(host, port);
 
             String sslProtocolsValue =
                     (String) userProperties.get(SSL_PROTOCOLS_PROPERTY);
@@ -723,6 +724,14 @@ public class WsWebSocketContainer
             }
 
             engine.setUseClientMode(true);
+
+            // Enable host verification
+            // Start with current settings (returns a copy)
+            SSLParameters sslParams = engine.getSSLParameters();
+            // Use HTTPS since WebSocket starts over HTTP(S)
+            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+            // Write the parameters back
+            engine.setSSLParameters(sslParams);
 
             return engine;
         } catch (Exception e) {
