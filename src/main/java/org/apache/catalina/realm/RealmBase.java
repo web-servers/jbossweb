@@ -467,6 +467,11 @@ public abstract class RealmBase
 
         // Check each defined security constraint
         String uri = request.getRequestPathMB().toString();
+        // Bug47080 - in rare cases this may be null
+        // Mapper treats as '/' do the same to prevent NPE
+        if (uri == null || uri.length() == 0) {
+            uri = "/";
+        }
         
         String method = request.getMethod();
         int i;
@@ -499,7 +504,7 @@ public abstract class RealmBase
                 }
 
                 for(int k=0; k < patterns.length; k++) {
-                    if(uri.equals(patterns[k])) {
+                    if(uri.equals(patterns[k]) || patterns[k].length() == 0 && uri.equals("/")) {
                         found = true;
                         if(collection[j].findMethod(method)) {
                             if(results == null) {
@@ -1417,7 +1422,7 @@ public abstract class RealmBase
             else if( name.equalsIgnoreCase(STRICT_AUTH_ONLY_MODE.name) )
                 mode = STRICT_AUTH_ONLY_MODE;
             else
-                throw new IllegalStateException("Unknown mode, must be one of: strict, authOnly, strictAuthOnly");
+                throw MESSAGES.unknownAuthMode(name);
             return mode;
         }
         
