@@ -48,6 +48,8 @@ public final class Constants {
             Boolean.valueOf(System.getProperty("org.apache.coyote.ajp.DEFAULT_TOMCAT_AUTHENTICATION", "true")).booleanValue();
     public static final String DEFAULT_REQUIRED_SECRET = 
             System.getProperty("org.apache.coyote.ajp.DEFAULT_REQUIRED_SECRET");
+    public static final String ALLOWED_REQUEST_ATTRIBUTES_PATTERN = 
+            System.getProperty("org.apache.coyote.ajp.ALLOWED_REQUEST_ATTRIBUTES_PATTERN");
     
     // Prefix codes for message types from server to container
     public static final byte JK_AJP13_FORWARD_REQUEST   = 2;
@@ -92,6 +94,13 @@ public final class Constants {
 
     // Used for attributes which are not in the list above
     public static final byte SC_A_REQ_ATTRIBUTE = 10;
+
+    /**
+     * AJP private request attributes
+     */
+    public static final String SC_A_REQ_LOCAL_ADDR  = "AJP_LOCAL_ADDR";
+    public static final String SC_A_REQ_REMOTE_PORT = "AJP_REMOTE_PORT";
+    public static final String SC_A_SSL_PROTOCOL    = "AJP_SSL_PROTOCOL";
 
     // Terminates list of attributes
     public static final byte SC_A_ARE_DONE      = (byte)0xFF;
