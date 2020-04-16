@@ -29,6 +29,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -246,6 +251,9 @@ public class AjpProcessor implements ActionHook {
      */
     protected static final byte[] pongMessageArray;
 
+    private static final Set<String> javaxAttributes;
+    private static final Set<String> iisTlsAttributes;
+
 
     /**
      * End message array.
@@ -307,6 +315,25 @@ public class AjpProcessor implements ActionHook {
         System.arraycopy(flushMessage.getBuffer(), 0, flushMessageArray, 0,
                 flushMessage.getLen());
 
+        // Build the Set of javax attributes
+        Set<String> s = new HashSet<String>();
+        s.add("javax.servlet.request.cipher_suite");
+        s.add("javax.servlet.request.key_size");
+        s.add("javax.servlet.request.ssl_session");
+        s.add("javax.servlet.request.X509Certificate");
+        javaxAttributes = Collections.unmodifiableSet(s);
+
+        Set<String> iis = new HashSet<String>();
+        iis.add("CERT_ISSUER");
+        iis.add("CERT_SUBJECT");
+        iis.add("CERT_COOKIE");
+        iis.add("HTTPS_SERVER_SUBJECT");
+        iis.add("CERT_FLAGS");
+        iis.add("HTTPS_SECRETKEYSIZE");
+        iis.add("CERT_SERIALNUMBER");
+        iis.add("HTTPS_SERVER_ISSUER");
+        iis.add("HTTPS_KEYSIZE");
+        iisTlsAttributes = Collections.unmodifiableSet(iis);
     }
 
 
@@ -336,6 +363,11 @@ public class AjpProcessor implements ActionHook {
     protected int keepAliveTimeout = -1;
     public int getKeepAliveTimeout() { return keepAliveTimeout; }
     public void setKeepAliveTimeout(int timeout) { keepAliveTimeout = timeout; }
+
+    private Pattern allowedRequestAttributesPatternPattern;
+    public void setAllowedRequestAttributesPatternPattern(Pattern allowedRequestAttributesPatternPattern) {
+        this.allowedRequestAttributesPatternPattern = allowedRequestAttributesPatternPattern;
+    }
 
 
     /**
@@ -806,7 +838,46 @@ public class AjpProcessor implements ActionHook {
                 String n = tmpMB.toString();
                 requestHeaderMessage.getBytes(tmpMB);
                 String v = tmpMB.toString();
-                request.setAttribute(n, v);
+                /*
+                 * AJP13 misses to forward the local IP address and the
+                 * remote port. Allow the AJP connector to add this info via
+                 * private request attributes.
+                 * We will accept the forwarded data and remove it from the
+                 * public list of request attributes.
+                 */
+                if(n.equals(Constants.SC_A_REQ_LOCAL_ADDR)) {
+                    request.localAddr().setString(v);
+                } else if(n.equals(Constants.SC_A_REQ_REMOTE_PORT)) {
+                    try {
+                        request.setRemotePort(Integer.parseInt(v));
+                    } catch (NumberFormatException nfe) {
+                        // Ignore invalid value
+                    }
+                } else if(n.equals(Constants.SC_A_SSL_PROTOCOL)) {
+                    request.setAttribute(org.apache.tomcat.util.net.Constants.PROTOCOL_VERSION_KEY, v);
+                } else if (n.equals("JK_LB_ACTIVATION")) {
+                    request.setAttribute(n, v);
+                } else if (javaxAttributes.contains(n)) {
+                    request.setAttribute(n, v);
+                } else if (iisTlsAttributes.contains(n)) {
+                    // Allow IIS TLS attributes
+                    request.setAttribute(n, v);
+                 } else {
+                    // All 'known' attributes will be processed by the previous
+                    // blocks. Any remaining attribute is an 'arbitrary' one.
+                    if (allowedRequestAttributesPatternPattern == null) {
+                        response.setStatus(403);
+                        error = true;
+                    } else {
+                        Matcher m = allowedRequestAttributesPatternPattern.matcher(n);
+                        if (m.matches()) {
+                            request.setAttribute(n, v);
+                        } else {
+                            response.setStatus(403);
+                            error = true;
+                        }
+                    }
+                }
                 break;
 
             case Constants.SC_A_CONTEXT :
