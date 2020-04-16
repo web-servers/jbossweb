@@ -63,5 +63,11 @@ public final class Constants {
      */
     public static final String SESSION_ID_KEY = "javax.servlet.request.ssl_session_id";
 
+    /**
+     * The request attribute key under which the String indicating the protocol
+     * that created the SSL socket is recorded - e.g. TLSv1 or TLSv1.2 etc.
+     */
+    public static final String PROTOCOL_VERSION_KEY =
+            "org.apache.tomcat.util.net.secure_protocol_version";
 
 }

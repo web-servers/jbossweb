@@ -23,6 +23,7 @@ import java.net.Socket;
 import java.net.URLEncoder;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
@@ -65,6 +66,9 @@ public class AjpProtocol
         setSoTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
         //setServerSoTimeout(Constants.DEFAULT_SERVER_SOCKET_TIMEOUT);
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
+        if (Constants.ALLOWED_REQUEST_ATTRIBUTES_PATTERN != null) {
+            setAllowedRequestAttributesPattern(Pattern.compile(Constants.ALLOWED_REQUEST_ATTRIBUTES_PATTERN));
+        }
     }
 
     
@@ -309,6 +313,14 @@ public class AjpProtocol
     public int getPacketSize() { return packetSize; }
     public void setPacketSize(int packetSize) { this.packetSize = packetSize; }
 
+    private Pattern allowedRequestAttributesPattern;
+    public Pattern getAllowedRequestAttributesPattern() {
+        return allowedRequestAttributesPattern;
+    }
+    public void setAllowedRequestAttributesPattern(Pattern allowedRequestAttributesPattern) {
+        this.allowedRequestAttributesPattern = allowedRequestAttributesPattern;
+    }
+
     
     /**
      * The number of seconds Tomcat will wait for a subsequent request
@@ -459,6 +471,7 @@ public class AjpProtocol
             processor.setTomcatAuthentication(proto.tomcatAuthentication);
             processor.setRequiredSecret(proto.requiredSecret);
             processor.setKeepAliveTimeout(proto.keepAliveTimeout);
+            processor.setAllowedRequestAttributesPatternPattern(proto.getAllowedRequestAttributesPattern());
             register(processor);
             return processor;
         }
