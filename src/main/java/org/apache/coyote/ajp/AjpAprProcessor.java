@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source
- * Copyright 2009, JBoss Inc., and individual contributors as indicated
- * by the @authors tag. See the copyright.txt in the distribution for a
- * full listing of individual contributors.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2012 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.coyote.ajp;
@@ -31,6 +27,13 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.ActionHook;
@@ -247,6 +250,9 @@ public class AjpAprProcessor implements ActionHook {
      */
     protected static final ByteBuffer pongMessageBuffer;
 
+    private static final Set<String> javaxAttributes;
+    private static final Set<String> iisTlsAttributes;
+
 
     /**
      * End message array.
@@ -309,6 +315,25 @@ public class AjpAprProcessor implements ActionHook {
         flushMessageBuffer.put(flushMessage.getBuffer(), 0,
                 flushMessage.getLen());
 
+        // Build the Set of javax attributes
+        Set<String> s = new HashSet<String>();
+        s.add("javax.servlet.request.cipher_suite");
+        s.add("javax.servlet.request.key_size");
+        s.add("javax.servlet.request.ssl_session");
+        s.add("javax.servlet.request.X509Certificate");
+        javaxAttributes= Collections.unmodifiableSet(s);
+
+        Set<String> iis = new HashSet<String>();
+        iis.add("CERT_ISSUER");
+        iis.add("CERT_SUBJECT");
+        iis.add("CERT_COOKIE");
+        iis.add("HTTPS_SERVER_SUBJECT");
+        iis.add("CERT_FLAGS");
+        iis.add("HTTPS_SECRETKEYSIZE");
+        iis.add("CERT_SERIALNUMBER");
+        iis.add("HTTPS_SERVER_ISSUER");
+        iis.add("HTTPS_KEYSIZE");
+        iisTlsAttributes = Collections.unmodifiableSet(iis);
     }
 
 
@@ -328,6 +353,11 @@ public class AjpAprProcessor implements ActionHook {
      */
     protected String requiredSecret = null;
     public void setRequiredSecret(String requiredSecret) { this.requiredSecret = requiredSecret; }
+
+    private Pattern allowedRequestAttributesPatternPattern;
+    public void setAllowedRequestAttributesPatternPattern(Pattern allowedRequestAttributesPatternPattern) {
+        this.allowedRequestAttributesPatternPattern = allowedRequestAttributesPatternPattern;
+    }
 
 
     /**
@@ -656,13 +686,15 @@ public class AjpAprProcessor implements ActionHook {
             event = false;
         } else if (actionCode == ActionCode.ACTION_EVENT_SUSPEND) {
             // No action needed
-        } else if (actionCode == ActionCode.ACTION_EVENT_RESUME) {
-            // An event is being processed already: adding for resume will be done
-            // when the socket gets back to the poller
-            if (!eventProcessing && !resumeNotification) {
-                endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+        } else if (actionCode == ActionCode.ACTION_EVENT_WAKEUP) {
+            synchronized (request) {
+                // An event is being processed already: adding for resume will be done
+                // when the socket gets back to the poller
+                if (!eventProcessing && !resumeNotification) {
+                    endpoint.getEventPoller().add(socket, timeout, false, false, true, true);
+                }
+                resumeNotification = true;
             }
-            resumeNotification = true;
         } else if (actionCode == ActionCode.ACTION_EVENT_TIMEOUT) {
             timeout = ((Integer) param).intValue();
         }
@@ -725,6 +757,7 @@ public class AjpAprProcessor implements ActionHook {
         // Decode headers
         MimeHeaders headers = request.getMimeHeaders();
 
+        boolean contentLengthSet = false;
         int hCount = requestHeaderMessage.getInt();
         for(int i = 0 ; i < hCount ; i++) {
             String hName = null;
@@ -759,8 +792,15 @@ public class AjpAprProcessor implements ActionHook {
 
             if (hId == Constants.SC_REQ_CONTENT_LENGTH ||
                     (hId == -1 && tmpMB.equalsIgnoreCase("Content-Length"))) {
-                // just read the content-length header, so set it
-                request.setContentLength( vMB.getInt() );
+                long cl = vMB.getLong();
+                if (contentLengthSet) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    error = true;
+                } else {
+                    contentLengthSet = true;
+                    // Set the content-length header for the request
+                    request.setContentLength(cl);
+                }
             } else if (hId == Constants.SC_REQ_CONTENT_TYPE ||
                     (hId == -1 && tmpMB.equalsIgnoreCase("Content-Type"))) {
                 // just read the content-type header, so set it
@@ -784,7 +824,46 @@ public class AjpAprProcessor implements ActionHook {
                 String n = tmpMB.toString();
                 requestHeaderMessage.getBytes(tmpMB);
                 String v = tmpMB.toString();
-                request.setAttribute(n, v);
+                /*
+                 * AJP13 misses to forward the local IP address and the
+                 * remote port. Allow the AJP connector to add this info via
+                 * private request attributes.
+                 * We will accept the forwarded data and remove it from the
+                 * public list of request attributes.
+                 */
+                if(n.equals(Constants.SC_A_REQ_LOCAL_ADDR)) {
+                    request.localAddr().setString(v);
+                } else if(n.equals(Constants.SC_A_REQ_REMOTE_PORT)) {
+                    try {
+                        request.setRemotePort(Integer.parseInt(v));
+                    } catch (NumberFormatException nfe) {
+                        // Ignore invalid value
+                    }
+                } else if(n.equals(Constants.SC_A_SSL_PROTOCOL)) {
+                    request.setAttribute(org.apache.tomcat.util.net.Constants.PROTOCOL_VERSION_KEY, v);
+                } else if (n.equals("JK_LB_ACTIVATION")) {
+                    request.setAttribute(n, v);
+                } else if (javaxAttributes.contains(n)) {
+                    request.setAttribute(n, v);
+                } else if (iisTlsAttributes.contains(n)) {
+                    // Allow IIS TLS attributes
+                    request.setAttribute(n, v);
+                 } else {
+                    // All 'known' attributes will be processed by the previous
+                    // blocks. Any remaining attribute is an 'arbitrary' one.
+                    if (allowedRequestAttributesPatternPattern == null) {
+                        response.setStatus(403);
+                        error = true;
+                    } else {
+                        Matcher m = allowedRequestAttributesPatternPattern.matcher(n);
+                        if (m.matches()) {
+                            request.setAttribute(n, v);
+                        } else {
+                            response.setStatus(403);
+                            error = true;
+                        }
+                    }
+                }
                 break;
 
             case Constants.SC_A_CONTEXT :
