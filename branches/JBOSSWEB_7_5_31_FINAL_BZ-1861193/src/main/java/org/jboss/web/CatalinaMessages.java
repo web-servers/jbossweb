@@ -1029,4 +1029,6 @@ public interface CatalinaMessages {
     @Message(id = 379, value = "Ignored external subset %s %s")
     String ignoredExternalSubset(String publicId, String systemId);
 
+    @Message(id = 380, value = "An invalid payload length was specified")
+    String frameinvalidLength();
 }
