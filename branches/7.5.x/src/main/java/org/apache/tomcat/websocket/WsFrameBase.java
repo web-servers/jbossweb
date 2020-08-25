@@ -34,6 +34,7 @@ import javax.websocket.PongMessage;
 
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.Utf8Decoder;
+import org.jboss.web.CatalinaMessages;
 
 /**
  * Takes the ServletInputStream, processes the WebSocket frames it contains and
@@ -250,6 +251,13 @@ public abstract class WsFrameBase {
         } else if (payloadLength == 127) {
             payloadLength = byteArrayToLong(inputBuffer, readPos, 8);
             readPos += 8;
+            // The most significant bit of those 8 bytes is required to be zero
+            // (see RFC 6455, section 5.2). If the most significant bit is set,
+            // the resulting payload length will be negative so test for that.
+            if (payloadLength < 0) {
+                throw new WsIOException(
+                        new CloseReason(CloseCodes.PROTOCOL_ERROR, ""));
+            }
         }
         if (Util.isControl(opCode)) {
             if (payloadLength > 125) {
