@@ -1,23 +1,19 @@
 /*
- * JBoss, Home of Professional Open Source
- * Copyright 2009, JBoss Inc., and individual contributors as indicated
- * by the @authors tag. See the copyright.txt in the distribution for a
- * full listing of individual contributors.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2012 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.coyote.ajp;
@@ -26,6 +22,7 @@ import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
@@ -68,6 +65,8 @@ public class AjpAprProtocol
         setSoTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
         //setServerSoTimeout(Constants.DEFAULT_SERVER_SOCKET_TIMEOUT);
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
+        if (Constants.ALLOWED_REQUEST_ATTRIBUTES_PATTERN != null)
+            setAllowedRequestAttributesPattern(Pattern.compile(Constants.ALLOWED_REQUEST_ATTRIBUTES_PATTERN));
     }
 
     
@@ -170,14 +169,14 @@ public class AjpAprProtocol
             if (this.domain != null ) {
                 try {
                     tpOname = new ObjectName
-                            (domain + ":" + "type=ThreadPool,name=" + getName());
+                            (domain + ":" + "type=ThreadPool,name=" + getJmxName());
                     Registry.getRegistry(null, null)
                     .registerComponent(endpoint, tpOname, null );
                 } catch (Exception e) {
                     CoyoteLogger.AJP_LOGGER.errorRegisteringPool(e);
                 }
                 rgOname = new ObjectName
-                        (domain + ":type=GlobalRequestProcessor,name=" + getName());
+                        (domain + ":type=GlobalRequestProcessor,name=" + getJmxName());
                 Registry.getRegistry(null, null).registerComponent(cHandler.global, rgOname, null);
             }
         }
@@ -321,14 +320,14 @@ public class AjpAprProtocol
      * Should authentication be done in the native webserver layer, 
      * or in the Servlet container ?
      */
-    protected boolean tomcatAuthentication = true;
+    protected boolean tomcatAuthentication = Constants.DEFAULT_TOMCAT_AUTHENTICATION;
     public boolean getTomcatAuthentication() { return tomcatAuthentication; }
     public void setTomcatAuthentication(boolean tomcatAuthentication) { this.tomcatAuthentication = tomcatAuthentication; }
 
     /**
      * Required secret.
      */
-    protected String requiredSecret = null;
+    protected String requiredSecret = Constants.DEFAULT_REQUIRED_SECRET;
     public void setRequiredSecret(String requiredSecret) { this.requiredSecret = requiredSecret; }
     
     /**
@@ -337,6 +336,14 @@ public class AjpAprProtocol
     protected int packetSize = Constants.MAX_PACKET_SIZE;
     public int getPacketSize() { return packetSize; }
     public void setPacketSize(int packetSize) { this.packetSize = packetSize; }
+
+    private Pattern allowedRequestAttributesPattern;
+    public Pattern getAllowedRequestAttributesPattern() {
+        return allowedRequestAttributesPattern;
+    }
+    public void setAllowedRequestAttributesPattern(Pattern allowedRequestAttributesPattern) {
+        this.allowedRequestAttributesPattern = allowedRequestAttributesPattern;
+    }
 
     /**
      * The number of seconds Tomcat will wait for a subsequent request
@@ -409,11 +416,68 @@ public class AjpAprProtocol
             AjpAprProcessor result = connections.get(socket);
             SocketState state = SocketState.CLOSED; 
             if (result != null) {
-                result.startProcessing();
-                // Call the appropriate event
+                synchronized (result.getRequest()) {
+                    result.startProcessing();
+                    // Call the appropriate event
+                    try {
+                        state = result.event(status);
+                    } catch (java.net.SocketException e) {
+                        // SocketExceptions are normal
+                        CoyoteLogger.AJP_LOGGER.socketException(e);
+                    } catch (java.io.IOException e) {
+                        // IOExceptions are normal
+                        CoyoteLogger.AJP_LOGGER.socketException(e);
+                    }
+                    // Future developers: if you discover any other
+                    // rare-but-nonfatal exceptions, catch them here, and log as
+                    // above.
+                    catch (Throwable e) {
+                        // any other exception or error is odd. Here we log it
+                        // with "ERROR" level, so it will show up even on
+                        // less-than-verbose logs.
+                        CoyoteLogger.AJP_LOGGER.socketError(e);
+                    } finally {
+                        if (state != SocketState.LONG) {
+                            connections.remove(socket);
+                            recycledProcessors.offer(result);
+                            if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
+                                proto.endpoint.getPoller().add(socket);
+                            }
+                        } else {
+                            if (proto.endpoint.isRunning()) {
+                                proto.endpoint.getEventPoller().add(socket, result.getTimeout(), 
+                                        false, false, result.getResumeNotification(), false);
+                            }
+                        }
+                        result.endProcessing();
+                    }
+                }
+            }
+            return state;
+        }
+        
+        public SocketState process(long socket) {
+            AjpAprProcessor processor = recycledProcessors.poll();
+            if (processor == null) {
+                processor = createProcessor();
+            }
+            synchronized (processor.getRequest()) {
                 try {
-                    state = result.event(status);
-                } catch (java.net.SocketException e) {
+
+                    SocketState state = processor.process(socket);
+                    if (state == SocketState.LONG) {
+                        // Associate the connection with the processor. The next request 
+                        // processed by this thread will use either a new or a recycled
+                        // processor.
+                        connections.put(socket, processor);
+                        proto.endpoint.getEventPoller().add(socket, processor.getTimeout(), false, 
+                                false, processor.getResumeNotification(), false);
+                    } else {
+                        recycledProcessors.offer(processor);
+                    }
+                    return state;
+
+                } catch(java.net.SocketException e) {
                     // SocketExceptions are normal
                     CoyoteLogger.AJP_LOGGER.socketException(e);
                 } catch (java.io.IOException e) {
@@ -428,61 +492,7 @@ public class AjpAprProtocol
                     // with "ERROR" level, so it will show up even on
                     // less-than-verbose logs.
                     CoyoteLogger.AJP_LOGGER.socketError(e);
-                } finally {
-                    if (state != SocketState.LONG) {
-                        connections.remove(socket);
-                        recycledProcessors.offer(result);
-                        if (proto.endpoint.isRunning() && state == SocketState.OPEN) {
-                            proto.endpoint.getPoller().add(socket);
-                        }
-                    } else {
-                        if (proto.endpoint.isRunning()) {
-                            proto.endpoint.getEventPoller().add(socket, result.getTimeout(), 
-                                    false, false, result.getResumeNotification(), false);
-                        }
-                    }
-                    result.endProcessing();
                 }
-            }
-            return state;
-        }
-        
-        public SocketState process(long socket) {
-            AjpAprProcessor processor = recycledProcessors.poll();
-            try {
-
-                if (processor == null) {
-                    processor = createProcessor();
-                }
-
-                SocketState state = processor.process(socket);
-                if (state == SocketState.LONG) {
-                    // Associate the connection with the processor. The next request 
-                    // processed by this thread will use either a new or a recycled
-                    // processor.
-                    connections.put(socket, processor);
-                    proto.endpoint.getEventPoller().add(socket, processor.getTimeout(), false, 
-                            false, processor.getResumeNotification(), false);
-                } else {
-                    recycledProcessors.offer(processor);
-                }
-                return state;
-
-            } catch(java.net.SocketException e) {
-                // SocketExceptions are normal
-                CoyoteLogger.AJP_LOGGER.socketException(e);
-            } catch (java.io.IOException e) {
-                // IOExceptions are normal
-                CoyoteLogger.AJP_LOGGER.socketException(e);
-            }
-            // Future developers: if you discover any other
-            // rare-but-nonfatal exceptions, catch them here, and log as
-            // above.
-            catch (Throwable e) {
-                // any other exception or error is odd. Here we log it
-                // with "ERROR" level, so it will show up even on
-                // less-than-verbose logs.
-                CoyoteLogger.AJP_LOGGER.socketError(e);
             }
             recycledProcessors.offer(processor);
             return SocketState.CLOSED;
@@ -493,6 +503,7 @@ public class AjpAprProtocol
             processor.setAdapter(proto.adapter);
             processor.setTomcatAuthentication(proto.tomcatAuthentication);
             processor.setRequiredSecret(proto.requiredSecret);
+            processor.setAllowedRequestAttributesPatternPattern(proto.getAllowedRequestAttributesPattern());
             register(processor);
             return processor;
         }
