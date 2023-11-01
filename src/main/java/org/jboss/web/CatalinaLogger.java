@@ -693,4 +693,12 @@ public interface CatalinaLogger extends BasicLogger {
     @Message(id = 1151, value = "Deserialization error")
     void deserializationError(@Cause Throwable t);
 
+    @LogMessage(level = WARN)
+    @Message(id = 1152, value = "Failed to deleted temporary file used for part [{0}]")
+    void deletePartFailed();
+
+    @LogMessage(level = WARN)
+    @Message(id = 1153, value = "Exception triggered ending access to session while recycling request")
+    void sessionEndAccessFail();
+
 }
