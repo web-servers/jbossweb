@@ -40,6 +40,8 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
 import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.RequestUtil;
+import org.apache.tomcat.util.ExceptionUtils;
+import org.jboss.web.CatalinaLogger;
 
 
 /**
@@ -60,7 +62,6 @@ import org.apache.catalina.util.RequestUtil;
  */
 
 class ApplicationHttpRequest extends HttpServletRequestWrapper {
-
 
     // ------------------------------------------------------- Static Variables
 
@@ -610,7 +611,12 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
      */
     public void recycle() {
         if (session != null) {
-            session.endAccess();
+            try {
+                session.endAccess();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                CatalinaLogger.CORE_LOGGER.sessionEndAccessFail();
+            }
         }
     }
 

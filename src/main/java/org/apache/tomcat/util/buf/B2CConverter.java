@@ -18,6 +18,8 @@
 
 package org.apache.tomcat.util.buf;
 
+import org.apache.tomcat.util.ExceptionUtils;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -60,7 +62,12 @@ public class B2CConverter {
      * Reset the decoder state, and empty the leftover buffer.
      */
     public void recycle() {
-        decoder.reset();
+        try {
+            decoder.reset();
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            BufLogger.ROOT_LOGGER.decoderResetFail();
+        }
         leftovers.position(0);
     }
 

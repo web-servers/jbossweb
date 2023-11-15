@@ -16,6 +16,7 @@
  */
 
 package org.apache.tomcat.util.buf;
+import org.apache.tomcat.util.ExceptionUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -32,7 +33,7 @@ import java.nio.charset.UnsupportedCharsetException;
  * @author Remy Maucherat
  */
 public class C2BConverter {
-    
+
     protected CharsetEncoder encoder = null;
     protected ByteBuffer bb = null;
     protected CharBuffer cb = null;
@@ -61,7 +62,12 @@ public class C2BConverter {
      * Reset the encoder state.
      */
     public void recycle() {
-        encoder.reset();
+        try {
+            encoder.reset();
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            BufLogger.ROOT_LOGGER.encoderResetFail();
+        }
         leftovers.position(0);
     }
 

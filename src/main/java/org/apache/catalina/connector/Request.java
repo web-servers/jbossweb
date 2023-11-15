@@ -87,6 +87,7 @@ import org.apache.catalina.util.StringParser;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.servlet31.ReadListener;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.EncodingToCharset;
@@ -505,6 +506,18 @@ public class Request
      * preparation for reuse of this object.
      */
     public void recycle() {
+
+        if (parts != null) {
+            for (Part part : parts) {
+                try {
+                    part.delete();
+                } catch (Throwable t) {
+                    ExceptionUtils.handleThrowable(t);
+                    CatalinaLogger.CONNECTOR_LOGGER.deletePartFailed();
+                }
+            }
+            parts = null;
+        }
 
         if (asyncContext != null && context != null) {
             for (AsyncListener listener : asyncListenerInstances) {
